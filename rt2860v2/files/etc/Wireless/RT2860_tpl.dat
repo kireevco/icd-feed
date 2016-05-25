@@ -1,32 +1,11 @@
-#!/bin/sh
-
-append DRIVERS "rt2860v2"
-
-# In init.d/boot:
-# /sbin/wifi detect > /tmp/wireless.tmp
-# will then cause /sbin/wifi to launch this function.
-# The stdout of the function will be appended to /etc/config/wireless,
-# which is the configuration storage of the uci.
-detect_rt2860v2() {
-	# Run this function only in first boot.
-	# Because it's going to append the default Wi-Fi configurations.
-
-	[ -e /tmp/RT2860.dat ] && return 0
-
-	ifconfig ra0 down
-
-	cat > /tmp/RT2860.dat<<EOF
 #The word of "Default" must not be removed
 Default
 CountryRegion=0
 CountryRegionABand=7
-CountryCode=US
 BssidNum=1
-SSID1=OpenWrt
 WirelessMode=9
 FixedTxMode=
 TxRate=0
-Channel=11
 BasicRate=15
 BeaconPeriod=100
 DtimPeriod=1
@@ -43,7 +22,7 @@ PktAggregate=1
 AutoProvisionEn=0
 FreqDelta=0
 TurboRate=0
-WmmCapable=1
+WmmCapable=0
 APAifsn=3;7;1;1
 APCwmin=4;4;3;2
 APCwmax=6;10;4;3
@@ -59,9 +38,7 @@ APSDCapable=0
 DLSCapable=0
 NoForwarding=0
 NoForwardingBTNBSSID=0
-HideSSID=1
 ShortSlot=1
-AutoChannelSelect=0
 IEEE8021X=0
 IEEE80211H=0
 CarrierDetect=0
@@ -112,7 +89,6 @@ LongPulseRadarTh=0
 AvgRssiReq=0
 DFS_R66=0
 BlockCh=
-GreenAP=0
 PreAuth=0
 AuthMode=OPEN
 EncrypType=NONE
@@ -140,7 +116,7 @@ MeshDefaultkey=0
 MeshWEPKEY=
 MeshWPAKEY=
 MeshId=
-WPAPSK1=12345678
+WPAPSK1=
 WPAPSK2=
 WPAPSK3=
 WPAPSK4=
@@ -191,8 +167,7 @@ HT_RDG=1
 HT_LinkAdapt=0
 HT_OpMode=0
 HT_MpduDensity=5
-HT_EXTCHA=0
-HT_BW=0
+HT_BW=1
 HT_AutoBA=1
 HT_BADecline=0
 HT_AMSDU=0
@@ -276,9 +251,3 @@ Key1Str=
 Key2Str=
 Key3Str=
 Key4Str=
-EOF
-
-	ifconfig ra0 up
-
-	return 0
-}

@@ -1,0 +1,30 @@
+cat > /etc/config/wireless<<EOF
+config wifi-device radio0
+	option type    rt2860v2
+	option variant RT2860
+	option country US
+	option hwmode  11g
+	option htmode  HT40
+	option channel auto
+
+config wifi-iface ap
+	option device     radio0
+	option mode       ap
+	option network    lan
+	option ifname     ra0
+	option ssid       "I2CD $(cat /sys/class/net/ra0/address | awk -F ":" '{print $4""$5""$6}'| tr a-z A-Z)"
+	option key        "$(cat /sys/class/net/ra0/address | awk -F ":" '{print $3""$4""$5""$6}'| tr a-z A-Z)"
+	option encryption none
+
+config wifi-iface sta
+	option device     radio0
+	option mode       sta
+	option network    wan
+	option ifname     apcli0
+	option ssid       ""
+	option key        ""
+	option encryption psk2
+	option disabled   1
+EOF
+
+exit 0
