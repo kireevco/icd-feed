@@ -61,6 +61,10 @@
 				ralink,group = "i2c";
 				ralink,function = "gpio";
 			};
+			wdt {
+				ralink,group = "wdt";
+				ralink,function = "gpio";
+			};
 		};
 		uartf_pins: uartf {
 			uart {
@@ -115,6 +119,18 @@
 
 	pcie@10140000 {
 		status = "okay";
+	};
+
+	gpio-keys-polled {
+		compatible = "gpio-keys";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		poll-interval = <20>;
+		btn_1 {
+			label = "btn_1";
+			gpios = <&gpio0 17 1>;
+			linux,code = <0x101>;
+		};
 	};
 
 	ehci@101c0000 {
