@@ -2167,8 +2167,8 @@ CONFIG_PACKAGE_objdump=m
 # CONFIG_PACKAGE_kmod-md-mod is not set
 # CONFIG_PACKAGE_kmod-nbd is not set
 # CONFIG_PACKAGE_kmod-scsi-cdrom is not set
-CONFIG_PACKAGE_kmod-scsi-core=y
-CONFIG_PACKAGE_kmod-scsi-generic=y
+# CONFIG_PACKAGE_kmod-scsi-core is not set
+# CONFIG_PACKAGE_kmod-scsi-generic is not set
 
 #
 # CAN Support
@@ -2295,7 +2295,6 @@ CONFIG_PACKAGE_kmod-fuse=y
 # CONFIG_PACKAGE_kmod-ledtrig-oneshot is not set
 # CONFIG_PACKAGE_kmod-ledtrig-timer is not set
 # CONFIG_PACKAGE_kmod-ledtrig-transient is not set
-# CONFIG_PACKAGE_kmod-ledtrig-usbdev is not set
 
 #
 # Libraries
@@ -2394,7 +2393,7 @@ CONFIG_PACKAGE_kmod-nf-ipt=y
 CONFIG_PACKAGE_kmod-nf-ipt6=y
 CONFIG_PACKAGE_kmod-nf-nat=y
 # CONFIG_PACKAGE_kmod-nf-nat6 is not set
-CONFIG_PACKAGE_kmod-nf-nathelper=y
+# CONFIG_PACKAGE_kmod-nf-nathelper is not set
 # CONFIG_PACKAGE_kmod-nf-nathelper-extra is not set
 CONFIG_PACKAGE_kmod-nfnetlink=y
 # CONFIG_PACKAGE_kmod-nfnetlink-log is not set
@@ -2559,7 +2558,7 @@ CONFIG_PACKAGE_kmod-sdhci-mt7620=y
 # CONFIG_PACKAGE_kmod-usb-acm is not set
 # CONFIG_PACKAGE_kmod-usb-atm is not set
 # CONFIG_PACKAGE_kmod-usb-cm109 is not set
-CONFIG_PACKAGE_kmod-usb-core=y
+# CONFIG_PACKAGE_kmod-usb-core is not set
 # CONFIG_PACKAGE_kmod-usb-dwc2 is not set
 # CONFIG_PACKAGE_kmod-usb-dwc3 is not set
 # CONFIG_PACKAGE_kmod-usb-hid is not set
@@ -2568,7 +2567,7 @@ CONFIG_PACKAGE_kmod-usb-core=y
 # CONFIG_PACKAGE_kmod-usb-ohci-pci is not set
 # CONFIG_PACKAGE_kmod-usb-printer is not set
 # CONFIG_PACKAGE_kmod-usb-serial is not set
-CONFIG_PACKAGE_kmod-usb-storage=y
+# CONFIG_PACKAGE_kmod-usb-storage is not set
 # CONFIG_PACKAGE_kmod-usb-storage-extras is not set
 # CONFIG_PACKAGE_kmod-usb-test is not set
 # CONFIG_PACKAGE_kmod-usb-uhci is not set
@@ -2781,17 +2780,17 @@ CONFIG_RT2860V2_AP_COC=y
 #
 # CONFIG_PACKAGE_micropython is not set
 # CONFIG_PACKAGE_micropython-lib is not set
-CONFIG_PACKAGE_python=m
+# CONFIG_PACKAGE_python is not set
 CONFIG_PACKAGE_python-base=m
 CONFIG_PACKAGE_python-codecs=m
 CONFIG_PACKAGE_python-compiler=m
 CONFIG_PACKAGE_python-ctypes=m
-CONFIG_PACKAGE_python-db=m
+# CONFIG_PACKAGE_python-db is not set
 CONFIG_PACKAGE_python-decimal=m
-CONFIG_PACKAGE_python-distutils=m
+# CONFIG_PACKAGE_python-distutils is not set
 # CONFIG_PACKAGE_python-dns is not set
 CONFIG_PACKAGE_python-email=m
-CONFIG_PACKAGE_python-gdbm=m
+# CONFIG_PACKAGE_python-gdbm is not set
 # CONFIG_PACKAGE_python-imglib is not set
 CONFIG_PACKAGE_python-light=m
 CONFIG_PACKAGE_python-logging=m
@@ -2799,14 +2798,14 @@ CONFIG_PACKAGE_python-multiprocessing=m
 # CONFIG_PACKAGE_python-mysql is not set
 CONFIG_PACKAGE_python-ncurses=m
 CONFIG_PACKAGE_python-openssl=m
-CONFIG_PACKAGE_python-pip=m
-CONFIG_PACKAGE_python-pydoc=m
+# CONFIG_PACKAGE_python-pip is not set
+# CONFIG_PACKAGE_python-pydoc is not set
 CONFIG_PACKAGE_python-pyserial=m
-CONFIG_PACKAGE_python-setuptools=m
+# CONFIG_PACKAGE_python-setuptools is not set
 CONFIG_PACKAGE_python-sqlite3=m
-CONFIG_PACKAGE_python-unittest=m
-CONFIG_PACKAGE_python-xml=m
-CONFIG_PACKAGE_python-yaml=m
+# CONFIG_PACKAGE_python-unittest is not set
+# CONFIG_PACKAGE_python-xml is not set
+# CONFIG_PACKAGE_python-yaml is not set
 # CONFIG_PACKAGE_python3 is not set
 # CONFIG_PACKAGE_python3-asyncio is not set
 # CONFIG_PACKAGE_python3-base is not set
@@ -2850,7 +2849,7 @@ CONFIG_PACKAGE_libbz2=y
 # Filesystem
 #
 # CONFIG_PACKAGE_libacl is not set
-CONFIG_PACKAGE_libattr=y
+# CONFIG_PACKAGE_libattr is not set
 CONFIG_PACKAGE_libext2fs=y
 CONFIG_PACKAGE_libfuse=y
 # CONFIG_PACKAGE_libow is not set
@@ -2983,7 +2982,7 @@ CONFIG_PACKAGE_libxtables=y
 #
 # Languages
 #
-CONFIG_PACKAGE_libyaml=m
+# CONFIG_PACKAGE_libyaml is not set
 
 #
 # Networking
@@ -3125,7 +3124,7 @@ CONFIG_LIBCURL_UNIX_SOCKETS=y
 CONFIG_LIBCURL_VERBOSE=y
 # CONFIG_PACKAGE_libdaemon is not set
 # CONFIG_PACKAGE_libdaq is not set
-CONFIG_PACKAGE_libdb47=y
+# CONFIG_PACKAGE_libdb47 is not set
 # CONFIG_PACKAGE_libdb47xx is not set
 # CONFIG_PACKAGE_libdbi is not set
 # CONFIG_PACKAGE_libdevmapper is not set
@@ -3134,7 +3133,7 @@ CONFIG_PACKAGE_libdb47=y
 # CONFIG_PACKAGE_libelf1 is not set
 # CONFIG_PACKAGE_libdbus is not set
 # CONFIG_PACKAGE_libesmtp is not set
-CONFIG_PACKAGE_libev=y
+# CONFIG_PACKAGE_libev is not set
 # CONFIG_PACKAGE_libevent is not set
 # CONFIG_PACKAGE_libevent2 is not set
 # CONFIG_PACKAGE_libevent2-core is not set
@@ -3143,7 +3142,7 @@ CONFIG_PACKAGE_libev=y
 # CONFIG_PACKAGE_libevent2-pthreads is not set
 # CONFIG_PACKAGE_libevhtp is not set
 # CONFIG_PACKAGE_libexif is not set
-CONFIG_PACKAGE_libexpat=y
+# CONFIG_PACKAGE_libexpat is not set
 # CONFIG_PACKAGE_libf2fs is not set
 # CONFIG_PACKAGE_libfaad2 is not set
 CONFIG_PACKAGE_libffi=y
@@ -3158,7 +3157,7 @@ CONFIG_PACKAGE_libffi=y
 # CONFIG_PACKAGE_libftdi1 is not set
 # CONFIG_PACKAGE_libgcrypt is not set
 # CONFIG_PACKAGE_libgd is not set
-CONFIG_PACKAGE_libgdbm=y
+# CONFIG_PACKAGE_libgdbm is not set
 CONFIG_PACKAGE_libgmp=y
 # CONFIG_PACKAGE_libgpg-error is not set
 # CONFIG_PACKAGE_libhamlib is not set
@@ -3312,7 +3311,7 @@ CONFIG_PACKAGE_libuv=y
 # CONFIG_PACKAGE_libwrap is not set
 # CONFIG_PACKAGE_libxerces-c is not set
 # CONFIG_PACKAGE_libxerces-c-samples is not set
-CONFIG_PACKAGE_libxml2=y
+# CONFIG_PACKAGE_libxml2 is not set
 # CONFIG_PACKAGE_libxslt is not set
 # CONFIG_PACKAGE_libyang is not set
 # CONFIG_PACKAGE_libzdb is not set
@@ -4215,11 +4214,11 @@ CONFIG_WPA_MSG_MIN_PRIORITY=3
 #
 # Compression
 #
-# CONFIG_PACKAGE_bzip2 is not set
+CONFIG_PACKAGE_bzip2=y
 # CONFIG_PACKAGE_unrar is not set
-# CONFIG_PACKAGE_unzip is not set
+CONFIG_PACKAGE_unzip=y
 # CONFIG_PACKAGE_xz-utils is not set
-# CONFIG_PACKAGE_zip is not set
+CONFIG_PACKAGE_zip=y
 
 #
 # Editors
@@ -4308,7 +4307,7 @@ CONFIG_PACKAGE_picocom=y
 # CONFIG_PACKAGE_mysql-server is not set
 # CONFIG_PACKAGE_pgsql-cli is not set
 # CONFIG_PACKAGE_pgsql-server is not set
-# CONFIG_PACKAGE_sqlite3-cli is not set
+CONFIG_PACKAGE_sqlite3-cli=y
 # CONFIG_PACKAGE_unixodbc-tools is not set
 
 #
