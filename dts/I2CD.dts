@@ -1,6 +1,6 @@
 /dts-v1/;
 
-/include/ "mt7620a.dtsi"
+#include "mt7620a.dtsi"
 
 / {
 	compatible = "ralink,mt7620a-eval-board", "ralink,mt7620a-soc";
@@ -11,8 +11,7 @@
 	};
 
 	palmbus@10000000 {
-
-		uart@500 {
+		uartf: uart@500 {
 			pinctrl-names = "default";
 			pinctrl-0 = <&uartf_pins>;
 
@@ -25,7 +24,7 @@
 			m25p80@0 {
 				#address-cells = <1>;
 				#size-cells = <1>;
-				compatible = "en25q64";
+				compatible = "jedec,spi-nor";
 				reg = <0 0>;
 				linux,modalias = "m25p80", "en25q64";
 				spi-max-frequency = <10000000>;
@@ -61,11 +60,8 @@
 				ralink,group = "i2c";
 				ralink,function = "gpio";
 			};
-			wdt {
-				ralink,group = "wdt";
-				ralink,function = "gpio";
-			};
 		};
+
 		uartf_pins: uartf {
 			uart {
 				ralink,group = "uartf";
@@ -76,11 +72,9 @@
 
 	ethernet@10100000 {
 		status = "okay";
-
 		pinctrl-names = "default";
 		pinctrl-0 = <&rgmii1_pins &rgmii2_pins &mdio_pins>;
-
-		ralink,port-map = "llllw";
+		mediatek,portmap = "llllw";
 
 		port@4 {
 			status = "okay";
@@ -110,7 +104,7 @@
 	};
 
 	gsw@10110000 {
-		ralink,port4 = "gmac";
+		mediatek,port4 = "gmac";
 	};
 
 	sdhci@10130000 {
@@ -126,6 +120,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		poll-interval = <20>;
+
 		btn_1 {
 			label = "btn_1";
 			gpios = <&gpio0 17 1>;
