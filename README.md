@@ -26,7 +26,7 @@ In the Ubuntu system, open the *Terminal* application and type the following com
 2. Download OpenWrt source codes:
 
     ```
-    git clone git@github.com:Rosonix/openwrt-chaos-calmer.git
+    git clone git@github.com:Rosonix/openwrt.git
     ```
 
 3. Prepare the default configuration file for feeds:
