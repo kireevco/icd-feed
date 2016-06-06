@@ -57,7 +57,6 @@ define KernelPackage/rt2860v2
 	DEPENDS:=@TARGET_ramips +wireless-tools +libuci +maccalc
 	DEFAULT:=y if (CONFIG_TARGET_ramips_mt7620n || CONFIG_TARGET_ramips_mt7620a)
 	FILES:=$(PKG_BUILD_DIR)/rt2860v2_ap/rt2860v2_ap.ko
-	AUTOLOAD:=$(call AutoLoad,50,rt2860v2_ap)
 	MENU:=1
 endef
 

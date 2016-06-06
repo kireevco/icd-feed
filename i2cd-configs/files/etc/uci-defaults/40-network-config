@@ -1,0 +1,26 @@
+cat > /etc/config/network << EOF
+
+config interface 'loopback'
+	option ifname 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config interface 'lan'
+	option type 'bridge'
+	option ifname 'eth0 ra0'
+	option proto 'static'
+	option ipaddr '192.168.3.1'
+	option netmask '255.255.255.0'
+
+config interface 'lan0'
+	option proto 'none'
+	option ifname 'eth0'
+	option auto '1'
+
+config interface 'wan'
+	option ifname 'apcli0'
+	option proto 'dhcp'
+EOF
+
+exit 0

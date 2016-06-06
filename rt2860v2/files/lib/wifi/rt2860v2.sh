@@ -13,9 +13,7 @@ detect_rt2860v2() {
 
 	[ -e /tmp/RT2860.dat ] && return 0
 
-	ifconfig ra0 down
-
-	cat > /tmp/RT2860.dat<<EOF
+	cat > /tmp/RT2860.dat << EOF
 #The word of "Default" must not be removed
 Default
 CountryRegion=0
@@ -277,8 +275,6 @@ Key2Str=
 Key3Str=
 Key4Str=
 EOF
-
-	ifconfig ra0 up
 
 	return 0
 }

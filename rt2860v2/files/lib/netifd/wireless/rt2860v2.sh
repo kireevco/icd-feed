@@ -102,6 +102,8 @@ rt2860v2_setup_sta() {
 
 	[ "$disabled" = "1" ] && return
 
+	ifconfig $ifname up
+
 	key=
 	case "$encryption" in
 		psk*|mixed*) json_get_vars key;;
@@ -142,7 +144,7 @@ drv_rt2860v2_setup() {
 	ssid=$(uci get wireless.ap.ssid)
 
 	cat /etc/Wireless/${variant}_tpl.dat > /tmp/${variant}.dat
-	cat >> /tmp/${variant}.dat<<EOF
+	cat >> /tmp/${variant}.dat << EOF
 HT_EXTCHA=${EXTCHA:-0}
 CountryCode=${country:-US}
 Channel=${channel:-8}
