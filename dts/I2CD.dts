@@ -60,6 +60,10 @@
 				ralink,group = "i2c";
 				ralink,function = "gpio";
 			};
+			wdt {
+				ralink,group = "wdt";
+				ralink,function = "gpio";
+			};
 		};
 
 		uartf_pins: uartf {
