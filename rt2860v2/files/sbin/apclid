@@ -1,115 +1,74 @@
 #!/bin/sh
 
-true > /tmp/apclid.log
+. /usr/share/rt2860v2/utils.sh
 
 iface="$1"
+ssid="$2"
+key="$3"
 
-n=0
-m=0
+MAX_INTERVAL=60
+interval=0
+
+[ -z "$iface" || -z "$ssid" ] && exit 1
+
 while true; do
-	sleep 1
-
-	ssid="$(uci get "wireless.${iface}.ssid")"
-	key="$(uci get "wireless.${iface}.key")"
-	disabled="$(uci get "wireless.${iface}.disabled")"
-
-	[ "$disabled" != "1" -a -n "$ssid" ] || {
-		ifconfig apcli0 down
-		exit
-	}
-
-	if ! iwconfig apcli0 | grep -q 'Not-Associated'; then
-		n=0
-		if ifconfig "br1:apcli" | grep -q 'inet addr:'; then
-			continue
-		fi
+	if ! iwconfig "$iface" | grep -Fq 'Not-Associated'; then
+		# $iface has connected to an AP
+		interval=0
+		sleep $MAX_INTERVAL
 	fi
 
-	ifname=$(uci get apclid.dhcp.ifname)
-	[ -n "$ifname" ] && {
-		INTERFACE="$ifname" /etc/init.d/udhcpc stop
-		ifconfig $ifname 0.0.0.0 > /dev/null 2>&1 || true
-	}
+	# Begin to connect to the AP
 
-	iwpriv apcli0 set ApCliEnable="0"
+	ifconfig $iface down
 
-	iwpriv apcli0 set SiteSurvey="1"
-	sleep 2 # waiting for SiteSurver get updated
-	let channel=$(iwpriv apcli0 get_site_survey | sed "/[0-9]* *$ssid *..:..:..:..:..:../!d" | awk '{printf $1"\n"}')
-	[ -n "$channel" ] || {
-		let tscan=$(uci get apclid.value.tscan)
-		[ -n "$tscan" ] || tscan=300
-		[ $n -le $tscan ] && n=$(( n + 1 ))
-		sleep $n
+	iwpriv $iface set ApCliEnable="0"
+
+	local result=$(site_survey)
+
+	local channel=$(echo "$result" | parse_channel_of_specific_ssid_from_site_survey_result "$ssid")
+
+	[ -z "$channel" ] && {
+		interval=$(( interval + 1 ))
+		[ $interval -gt $MAX_INTERVAL ] && internal=$MAX_INTERVAL
+		sleep $interval
 		continue
 	}
-	n=0
 
-	password=$(uci get RT2860.dat.ApCliWPAPSK)
-	auth=$(uci get RT2860.dat.ApCliAuthMode)
-	encrypt=$(uci get RT2860.dat.ApCliEncrypType)
+	interval=0
 
-	iwpriv apcli0 set Channel="$channel"
-	iwpriv apcli0 set ApCliSsid="$ssid"
-	iwpriv apcli0 set ApCliEncrypType="$encrypt"
-	iwpriv apcli0 set ApCliAuthMode="$auth"
+	local encryption=$(echo "$result" | parse_encryption_of_specific_ssid_from_site_survey_result "$ssid")
 
-	if [ $encrypt = "WEP" ]; then
-		iwpriv apcli0 set ApCliKey1="$password"
-		iwpriv apcli0 set ApCliDefaultKeyID="1"
-	else
-		iwpriv apcli0 set ApCliWPAPSK="$password"
+	local authmode enctype
+
+	case "$encryption" in
+		psk2*)
+			authmode="WPA2PSK"
+			;;
+		psk*)
+			authmode="WPAPSK"
+			;;
+		none)
+			authmode="NONE"
+			;;
+	esac
+
+	case "$encryption" in
+		*aes*)
+			enctype="AES"
+			;;
+		*tkip*)
+			enctype="TKIP"
+			;;
+	esac
+
+	iwpriv $iface set Channel="$channel"
+	iwpriv $iface set ApCliSsid="$ssid"
+	iwpriv $iface set ApCliAuthMode="$authmode"
+	if [ "$authmode" != "NONE" ]; then
+		iwpriv $iface set ApCliEncrypType="$enctype"
+		iwpriv $iface set ApCliWPAPSK="$key"
 	fi
-
-	iwpriv apcli0 set ApCliEnable="1"
-	ifconfig apcli0 up
-
-	cat > /tmp/apclid.log << EOF
-$(date)
-DHCP Interface: $ifname
-ifconfig apcli0 down
-iwpriv apcli0 set ApCliEnable="0"
-iwpriv apcli0 set Channel="$channel"
-iwpriv apcli0 set ApCliAuthMode="$auth"
-iwpriv apcli0 set ApCliEncrypType="$encrypt"
-iwpriv apcli0 set ApCliSsid="$ssid"
-iwpriv apcli0 set ApCliWPAPSK="$password"
-iwpriv apcli0 set ApCliKey1="$password"
-iwpriv apcli0 set ApCliDefaultKeyID="1"
-iwpriv apcli0 set ApCliEnable="1"
-ifconfig apcli0 up
-EOF
-	let timeout=$(uci get apclid.value.timeout)
-	[ -n "$timeout" ] || timeout=300
-	for i in $(seq 1 $timeout); do
-		if ! iwconfig apcli0 | grep -q 'Not-Associated'; then
-			[ -n "$ifname" ] && {
-				INTERFACE="$ifname" /etc/init.d/udhcpc restart
-			}
-			for j in $(seq 1 $timeout); do
-				if ifconfig "br1:apcli" | grep -q 'inet addr:'; then
-					m=0
-					break
-				fi
-			sleep 1
-			done
-			break
-		fi
-		sleep 1
-	done
-
-	if ! ifconfig "br1:apcli" | grep -q 'inet addr:'; then
-		iwpriv apcli0 set ApCliEnable="0"
-
-		timeout=600
-		if [ "$m" -lt "$timeout" ]; then
-			let m++
-		else
-			m="$timeout"
-		fi
-		sleep $m
-	fi
-
+	iwpriv $iface set ApCliEnable="1"
+	ifconfig $iface up
 done
-
-# version 2

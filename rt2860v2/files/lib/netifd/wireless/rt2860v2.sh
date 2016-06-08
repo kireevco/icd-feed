@@ -100,18 +100,20 @@ rt2860v2_setup_sta() {
 	json_select config
 	json_get_vars mode apname ifname ssid encryption key key1 key2 key3 key4 wps_pushbutton disabled led
 
+	local stad="/sbin/apclid"
+
+	ifconfig $ifname down
+
 	[ "$disabled" = "1" ] && {
-		pkill -x "/sbin/apclid"
-		ifconfig $ifname down
+		pkill -x "$stad"
 		iwpriv $ifname set ApCliEnable=0
 		return
 	}
 
-	ifconfig $ifname up
-
-	/sbin/apclid "$ifname" &
-	pid=$?
-	wireless_add_process "$?" /sbin/apclid "$ifname"
+	logger "$stad "$ifname" "$ssid" "$key" &"
+	"$stad" "$ifname" "$ssid" "$key" &
+	local pid=$!
+	wireless_add_process "$pid" "$stad" "$ifname" "$ssid" "$key"
 
 	json_select ..
 
