@@ -19,6 +19,8 @@ endef
 define Package/i2cd-configs/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_DIR) $(1)/lib/rc.button/on-click.d
+	$(INSTALL_DIR) $(1)/lib/rc.button/on-long-click.d
 
 	$(CP) ./files/* $(1)
 endef
