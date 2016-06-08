@@ -17,6 +17,7 @@ define KernelPackage/rt2860v2/description
 endef
 
 define Package/i2cd-configs/install
+	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 
 	$(CP) ./files/* $(1)
