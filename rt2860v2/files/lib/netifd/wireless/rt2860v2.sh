@@ -100,20 +100,20 @@ rt2860v2_setup_sta() {
 	json_select config
 	json_get_vars mode apname ifname ssid encryption key key1 key2 key3 key4 wps_pushbutton disabled led
 
-	[ "$disabled" = "1" ] && return
+	[ "$disabled" = "1" ] && {
+		pkill -x "/sbin/apclid"
+		ifconfig $ifname down
+		iwpriv $ifname set ApCliEnable=0
+		return
+	}
 
 	ifconfig $ifname up
 
-	key=
-	case "$encryption" in
-		psk*|mixed*) json_get_vars key;;
-	esac
-	json_select ..
+	/sbin/apclid "$ifname" &
+	pid=$?
+	wireless_add_process "$?" /sbin/apclid "$ifname"
 
-	# TODO: apclid
-	# /sbin/apclid "ra0" "$ifname" "${ssid}" "$encryption" "${key}"
-	# sleep 1
-	# wireless_add_process "$(cat /tmp/apclid-${ifname}.pid)" /sbin/apclid ra0 "$ifname" "${ssid}" "$encryption" "${key}"
+	json_select ..
 
 	wireless_add_vif "$name" "$ifname"
 }
@@ -150,7 +150,7 @@ CountryCode=${country:-US}
 Channel=${channel:-8}
 AutoChannelSelect=${auto_channel:-0}
 HideSSID=${hidden:-0}
-SSID1=${ssid:-Flo}
+SSID1=${ssid:-OpenWrt}
 HT_BSSCoexistence=${coex:-1}
 EOF
 	for_each_interface "ap" rt2860v2_setup_ap
