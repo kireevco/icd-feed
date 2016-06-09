@@ -1,4 +1,4 @@
-get_encrypted_ra_key() {
+get_encrypted_ap_key() {
 	local realkey="$1"
 	local apaddr=$(uci get wireless.ap.macaddr)
 	local keykey=$(echo -n "$apaddr" | awk -F ":" '{print $4""$5""$6 }' | tr [:lower:] [:upper:])
@@ -6,7 +6,7 @@ get_encrypted_ra_key() {
 	echo "$key"
 }
 
-get_decrypted_ra_key() {
+get_decrypted_ap_key() {
 	local key="$1"
 	local apaddr=$(uci get wireless.ap.macaddr)
 	local keykey=$(echo -n "$apaddr" | awk -F ":" '{print $4""$5""$6 }' | tr [:lower:] [:upper:])
