@@ -18,8 +18,8 @@ drv_rt2860v2_init_iface_config() {
 	config_add_int 'auth_port:port'
 
 	config_add_string ifname apname mode ssid encryption key key1 key2 key3 key4 wps_pushbutton macfilter led
-        config_add_boolean hidden isolate
-        config_add_array 'maclist:list(macaddr)'
+	config_add_boolean hidden isolate
+	config_add_array 'maclist:list(macaddr)'
 }
 
 drv_rt2860v2_cleanup() {
