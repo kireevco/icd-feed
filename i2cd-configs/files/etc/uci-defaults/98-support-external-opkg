@@ -1,0 +1,3 @@
+echo "dest ext /tmp/vol/2" >> /etc/opkg.conf
+
+exit 0
