@@ -1,0 +1,16 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2016 Rosonix Technology, Inc.
+
+START=98
+
+boot() {
+	# Mount eMMC partitions
+	[ -b "/dev/mmcblk0p1" ] && {
+			mkdir -p /tmp/vol/1
+			mount -t ext4 -r /dev/mmcblk0p1 /tmp/vol/1
+	}
+	[ -b "/dev/mmcblk0p2" ] && {
+			mkdir -p /tmp/vol/2
+			mount -t ext4 -o data=journal,sync /dev/mmcblk0p2 /tmp/vol/2
+	}
+}
