@@ -4,6 +4,10 @@
 START=98
 
 boot() {
+	# I don’t know what’s going on with the Wi-Fi driver. It seems like need to
+	# be init again so that we can start using it.
+	wifi
+
 	# Mount eMMC partitions
 	[ -b "/dev/mmcblk0p1" ] && {
 			mkdir -p /tmp/vol/1
