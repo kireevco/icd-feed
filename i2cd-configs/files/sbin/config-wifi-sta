@@ -1,0 +1,27 @@
+#!/bin/sh
+
+enabled="$1"
+ssid="$2"
+key="$3"
+
+[ "$enabled" = "1" -o "$enabled" = "0" ] || {
+	cat << EOF
+usage: config-wifi-sta <enabled> [<ssid> <password>]
+
+enabled: 1, 0
+EOF
+	exit 2
+}
+
+. /usr/share/rt2860v2/encrypt.sh
+
+if [ "$enabled" = "1" ] then
+	uci set wireless.sta.disabled="0"
+elif [ "$enabled" = "0" ] then
+	uci set wireless.sta.disabled="1"
+fi
+
+[ -n "$ssid" ] && uci set wireless.sta.ssid="$ssid"
+[ -n "$key" ] && uci set wireless.sta.key=$(get_encrypted_sta_key "$key")
+
+uci commit
