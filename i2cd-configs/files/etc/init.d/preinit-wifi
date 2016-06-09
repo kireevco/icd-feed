@@ -20,7 +20,10 @@ boot() {
 	if [ "$(uci get wireless.ap.macaddr)" != "$wifiaddr" ]; then
 		uci set wireless.ap.macaddr="$wifiaddr"
 		uci set wireless.ap.ssid="I2CD $(echo -n $wifiaddr | sed 's/://g' | tail -c 6 | tr [:lower:] [:upper:])"
-		uci set wireless.ap.key=$(echo -n $wifiaddr | sed 's/://g' | tail -c 8 | tr [:lower:] [:upper:])
+		local keykey=$(echo -n "$wifiaddr" | awk -F ":" '{print $4""$5""$6 }' | tr [:lower:] [:upper:])
+		local realkey=$(echo -n $wifiaddr | sed 's/://g' | tail -c 8 | tr [:lower:] [:upper:])
+		local key=$(echo -n "$realkey" | openssl aes-256-cbc -k "$keykey" | base64)
+		uci set wireless.ap.key="$key"
 		uci set wireless.ap.encryption=psk2
 		uci commit
 	fi

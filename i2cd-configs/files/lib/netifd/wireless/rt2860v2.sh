@@ -61,7 +61,7 @@ rt2860v2_setup_ap() {
 		iwpriv $ifname set IEEE8021X=0
 		local keykey=$(cat "/sys/class/net/${ifname}/address" | awk -F ":" '{print $4""$5""$6 }' | tr a-z A-Z)
 		local realkey=$(echo -n "$key" | base64 -d | openssl aes-256-cbc -k "$keykey" -d)
-		[ "$eap" = "1" ] || iwpriv $ifname set "WPAPSK=${realkey}"
+		[ "$eap" = "1" ] || iwpriv $ifname set "WPAPSK=$realkey"
 		iwpriv $ifname set DefaultKeyID=2
 		;;
 	none)
