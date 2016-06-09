@@ -98,22 +98,13 @@ rt2860v2_setup_sta() {
 	local name="$1"
 
 	json_select config
-	json_get_vars mode apname ifname ssid encryption key key1 key2 key3 key4 wps_pushbutton disabled led
+	json_get_vars mode apname ifname ssid encryption key key1 key2 key3 key4 wps_pushbutton led
 
-	local stad="/sbin/apclid"
+	local stad="apclid"
 
-	ifconfig $ifname down
+	sta_teardown
 
-	[ "$disabled" = "1" ] && {
-		pkill -x "$stad"
-		iwpriv $ifname set ApCliEnable=0
-		return
-	}
-
-	logger "$stad "$ifname" "$ssid" "$key" &"
 	"$stad" "$ifname" "$ssid" "$key" &
-	local pid=$!
-	wireless_add_process "$pid" "$stad" "$ifname" "$ssid" "$key"
 
 	json_select ..
 
@@ -169,8 +160,18 @@ rt2860v2_teardown() {
 }
 
 drv_rt2860v2_teardown() {
+	sta_teardown
 	wireless_process_kill_all
 	for_each_interface "ap sta" rt2860v2_teardown
+}
+
+sta_teardown() {
+	local stad="apclid"
+	pidof "$stad" | while read -r line; do
+		kill -9 "$line"
+	done
+
+	iwpriv $(uci get wireless.sta.ifname) set ApCliEnable=0
 }
 
 add_driver rt2860v2
