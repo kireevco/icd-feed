@@ -10,7 +10,7 @@ parse_channel_of_specific_ssid_from_site_survey_result() {
 	while read -r line; do
 		local ssid=$(echo "$line" | cut -b 5-36 | sed -e 's/[[:space:]]*$//')
 
-		[ "$target_ssid" = "$ssid" ] || return
+		[ "$target_ssid" = "$ssid" ] || continue
 
 		echo "$line" | sed 's/^\([0-9]\+\)\ .*/\1/'
 
@@ -24,7 +24,7 @@ parse_encryption_of_specific_ssid_from_site_survey_result() {
 	while read -r line; do
 		local ssid=$(echo "$line" | cut -b 5-36 | sed -e 's/[[:space:]]*$//')
 
-		[ "$target_ssid" = "$ssid" ] || return
+		[ "$target_ssid" = "$ssid" ] || continue
 
 		local security=$(echo "$line" | cut -b 58-79 | sed -e 's/[[:space:]]*$//')
 
