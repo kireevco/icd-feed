@@ -6,7 +6,7 @@
 
 logger "$BUTTON pressed for $SEEN seconds"
 
-if [ "$SEEN" -gt 10 ]; then
+if [ $SEEN -ge 10 ]; then
 	for f in $(ls /lib/rc.button/on-long-click.d); do
 		"/lib/rc.button/on-long-click.d/$f"
 	done
