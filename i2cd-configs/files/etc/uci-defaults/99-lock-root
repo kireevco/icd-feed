@@ -1,0 +1,3 @@
+passwd -l root
+
+exit 0
