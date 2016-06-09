@@ -13,4 +13,22 @@ boot() {
 			mkdir -p /tmp/vol/2
 			mount -t ext4 -o data=journal,sync /dev/mmcblk0p2 /tmp/vol/2
 	}
+
+	# Install Python symlinks
+	[ -e /tmp/vol/2/usr/bin/easy_install -a ! -s /usr/bin/easy_install ] && \
+		ln -s /tmp/vol/2/usr/bin/easy_install /usr/bin
+	[ -e /tmp/vol/2/usr/bin/easy_install-2.7 -a ! -s /usr/bin/easy_install-2.7 ] && \
+		ln -s /tmp/vol/2/usr/bin/easy_install-2.7 /usr/bin
+	[ -e /tmp/vol/2/usr/bin/pip -a ! -s /usr/bin/pip ] && \
+		ln -s /tmp/vol/2/usr/bin/pip /usr/bin
+	[ -e /tmp/vol/2/usr/bin/pip2 -a ! -s /usr/bin/pip2 ] && \
+		ln -s /tmp/vol/2/usr/bin/pip2 /usr/bin
+	[ -e /tmp/vol/2/usr/bin/pip2.7 -a ! -s /usr/bin/pip2.7 ] && \
+		ln -s /tmp/vol/2/usr/bin/pip2.7 /usr/bin
+	[ -e /tmp/vol/2/usr/bin/python -a ! -s /usr/bin/python ] && \
+		ln -s /tmp/vol/2/usr/bin/python /usr/bin
+	[ -e /tmp/vol/2/usr/lib/libpython2.7.so -a ! -s /usr/lib/libpython2.7.so ] && \
+		ln -s /tmp/vol/2/usr/lib/libpython2.7.so /usr/lib
+	[ -e /tmp/vol/2/usr/lib/python2.7 -a ! -s /usr/lib/python2.7 ] && \
+		ln -s /tmp/vol/2/usr/lib/python2.7 /usr/lib
 }
