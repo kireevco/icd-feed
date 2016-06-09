@@ -17,9 +17,9 @@ EOF
 
 . /usr/share/rt2860v2/encrypt.sh
 
-if [ "$enabled" = "1" ] then
+if [ "$enabled" = "1" ]; then
 	uci set wireless.ap.disabled="0"
-elif [ "$enabled" = "0" ] then
+elif [ "$enabled" = "0" ]; then
 	uci set wireless.ap.disabled="1"
 fi
 
