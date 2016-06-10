@@ -18,10 +18,9 @@ define KernelPackage/rt2860v2/description
 endef
 
 define Package/i2cd-configs/install
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/button
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_DIR) $(1)/lib/rc.button/on-click.d
-	$(INSTALL_DIR) $(1)/lib/rc.button/on-long-click.d
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_DIR) $(1)/usr/share/rt2860v2
 
