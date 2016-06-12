@@ -2105,6 +2105,7 @@ CONFIG_PACKAGE_procd=y
 # CONFIG_PACKAGE_qos-scripts is not set
 # CONFIG_PACKAGE_resolveip is not set
 # CONFIG_PACKAGE_rpcd is not set
+CONFIG_PACKAGE_seriald=y
 # CONFIG_PACKAGE_sqm-scripts is not set
 CONFIG_PACKAGE_swconfig=y
 CONFIG_PACKAGE_ubox=y
