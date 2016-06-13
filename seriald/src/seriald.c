@@ -16,6 +16,7 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 
+#include "strutils.h"
 #include "fdio.h"
 #include "term.h"
 
@@ -95,7 +96,6 @@ static void register_signal_handlers(void);
 static void loop(void);
 static void tty_read_line_parser(const int n, const char *buff_rd);
 static void tty_read_line_cb(const char *line);
-static void strchrdel(char *str, char garbage);
 void fatal(const char *format, ...);
 int main(int argc, char *argv[]);
 
@@ -323,15 +323,6 @@ static void tty_read_line_cb(const char *line)
 {
 	printf("%s\n", line);
 	return;
-}
-
-static void strchrdel(char *str, char garbage) {
-	char *src, *dst;
-	for (src = dst = str; *src != '\0'; src++) {
-		*dst = *src;
-		if (*dst != garbage) dst++;
-	}
-	*dst = '\0';
 }
 
 int main(int argc, char *argv[])
