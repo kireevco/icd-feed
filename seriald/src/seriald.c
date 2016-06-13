@@ -36,6 +36,8 @@ struct tty_q {
 
 #define TTY_RD_SZ 256
 
+char buff_rd_line[TTY_RD_SZ+1] = "";
+
 int tty_fd;
 
 #define TTY_WRITE_SZ_DIV 10
@@ -91,6 +93,9 @@ static void parse_args(int argc, char *argv[]);
 static void deadly_handler(int signum);
 static void register_signal_handlers(void);
 static void loop(void);
+static void tty_read_line_parser(const int n, const char *buff_rd);
+static void tty_read_line_cb(const char *line);
+static void strchrdel(char *str, char garbage);
 void fatal(const char *format, ...);
 int main(int argc, char *argv[]);
 
@@ -261,9 +266,7 @@ static void loop(void)
 				if (errno != EAGAIN && errno != EWOULDBLOCK)
 					fatal("read from term failed: %s", strerror(errno));
 			} else {
-				if (writen_ni(STO, buff_rd, n) < n) {
-					fatal("write to stdout failed: %s", strerror(errno));
-				}
+				tty_read_line_parser(n, buff_rd);
 			}
 		}
 
@@ -279,6 +282,56 @@ static void loop(void)
 			tty_q.len -= n;
 		}
 	}
+}
+
+static void tty_read_line_parser(const int n, const char *buff_rd)
+{
+	const char *p;
+	const char *pp;
+	char buff[TTY_RD_SZ+1] = "";
+
+	/* buff_rd isn't null-terminated */
+	strncat(buff, buff_rd, n);
+
+	pp = buff;
+
+	while ((p = strchr(pp, '\n'))) {
+		if (strlen(buff_rd_line) + p - pp > TTY_RD_SZ) {
+			tty_read_line_cb(buff_rd_line);
+			*buff_rd_line = '\0';
+		}
+
+		strncat(buff_rd_line, pp, p - pp);
+		strchrdel(buff_rd_line, '\r');
+		tty_read_line_cb(buff_rd_line);
+		*buff_rd_line = '\0';
+
+		pp = p + 1;
+	}
+
+	if (pp) {
+		if (strlen(buff_rd_line) + n - (pp - buff) > TTY_RD_SZ) {
+			tty_read_line_cb(buff_rd_line);
+			*buff_rd_line = '\0';
+		}
+		strncat(buff_rd_line, pp, n - (pp - buff));
+		strchrdel(buff_rd_line, '\r');
+	}
+}
+
+static void tty_read_line_cb(const char *line)
+{
+	printf("%s\n", line);
+	return;
+}
+
+static void strchrdel(char *str, char garbage) {
+	char *src, *dst;
+	for (src = dst = str; *src != '\0'; src++) {
+		*dst = *src;
+		if (*dst != garbage) dst++;
+	}
+	*dst = '\0';
 }
 
 int main(int argc, char *argv[])
