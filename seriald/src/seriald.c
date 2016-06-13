@@ -12,13 +12,16 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <limits.h>
+#include <pthread.h>
 
 #define _GNU_SOURCE
 #include <getopt.h>
 
+#include "seriald.h"
 #include "strutils.h"
 #include "fdio.h"
 #include "term.h"
+#include "ubus.h"
 
 /* TODO: open source */
 /* TODO: support base64 for wrapping the data */
@@ -79,6 +82,7 @@ struct {
 	int databits;
 	int stopbits;
 	int noreset;
+	char *socket;
 } opts = {
 	.port = "",
 	.baud = 9600,
@@ -87,7 +91,10 @@ struct {
 	.databits = 8,
 	.stopbits = 1,
 	.noreset = 0,
+	.socket = NULL, /* the library fall back to default socket when it is NULL */
 };
+
+static pthread_t uloop_tid;
 
 static void show_usage(void);
 static void parse_args(int argc, char *argv[]);
@@ -96,7 +103,6 @@ static void register_signal_handlers(void);
 static void loop(void);
 static void tty_read_line_parser(const int n, const char *buff_rd);
 static void tty_read_line_cb(const char *line);
-void fatal(const char *format, ...);
 int main(int argc, char *argv[]);
 
 static void show_usage()
@@ -108,6 +114,7 @@ static void show_usage()
 	printf("    baudrate should be one of: 0, 50, 75, 110, 134, 150, 200, 300, 600,\n");
 	printf("    1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400\n");
 	printf("  -f s (=soft) | h (=hard) | n (=none)\n");
+	printf("  -s <ubus socket> (no need to give if you use the default one)");
 }
 
 void fatal(const char *format, ...)
@@ -138,7 +145,7 @@ static void parse_args(int argc, char *argv[])
 	int c;
 	int r = 0;
 
-	while ((c = getopt(argc, argv, "hf:b:")) != -1) {
+	while ((c = getopt(argc, argv, "hf:b:s:")) != -1) {
 		switch (c) {
 			case 'f':
 				switch (optarg[0]) {
@@ -155,7 +162,7 @@ static void parse_args(int argc, char *argv[])
 						opts.flow = FC_NONE;
 						break;
 					default:
-						fprintf(stderr, "Invalid flow control: %c\n", optarg[0]);
+						DPRINTF("Invalid flow control: %c\n", optarg[0]);
 						r = -1;
 						break;
 				}
@@ -163,9 +170,12 @@ static void parse_args(int argc, char *argv[])
 			case 'b':
 				opts.baud = atoi(optarg);
 				if (opts.baud == 0 || !term_baud_ok(opts.baud)) {
-					fprintf(stderr, "Invalid baud rate: %d\n", opts.baud);
+					DPRINTF("Invalid baud rate: %d\n", opts.baud);
 					r = -1;
 				}
+				break;
+			case 's':
+				opts.socket = optarg;
 				break;
 			case 'h':
 				r = 1;
@@ -182,7 +192,7 @@ static void parse_args(int argc, char *argv[])
 	}
 
 	if ((argc - optind) < 1) {
-		fprintf(stderr, "No port given\n");
+		DPRINTF("No port given\n");
 		show_usage();
 		exit(EXIT_FAILURE);
 	}
@@ -193,7 +203,7 @@ static void parse_args(int argc, char *argv[])
 
 static void deadly_handler(int signum)
 {
-	fprintf(stderr, "seriald is signaled with TERM\n");
+	DPRINTF("seriald is signaled with TERM\n");
 	if (!sig_exit) {
 		sig_exit = 1;
 		kill(0, SIGTERM);
@@ -360,7 +370,17 @@ int main(int argc, char *argv[])
 
 	set_tty_write_sz(term_get_baudrate(tty_fd, NULL));
 
+	if (seriald_ubus_init(opts.socket) < 0) {
+		DPRINTF("Failed to connect to ubus\n");
+		return 1;
+	}
+
+	r = pthread_create(&uloop_tid, NULL, &seriald_ubus_loop, NULL);
+	if (r) fatal("can't create thread for uloop: %s", strerror(r));
+
 	loop();
+
+	seriald_ubus_done();
 
 	return EXIT_SUCCESS;
 }
