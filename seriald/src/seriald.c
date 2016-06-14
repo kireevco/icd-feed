@@ -12,7 +12,6 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <limits.h>
-#include <pthread.h>
 
 #define _GNU_SOURCE
 #include <getopt.h>
@@ -30,15 +29,6 @@
 #define STO STDOUT_FILENO
 #define STI STDIN_FILENO
 
-#ifndef TTY_Q_SZ
-#define TTY_Q_SZ 256
-#endif
-
-struct tty_q {
-	int len;
-	unsigned char buff[TTY_Q_SZ];
-} tty_q;
-
 #define TTY_RD_SZ 256
 
 char buff_rd_line[TTY_RD_SZ+1] = "";
@@ -55,6 +45,10 @@ int tty_write_sz;
 		tty_write_sz = (baud) / TTY_WRITE_SZ_DIV; \
 		if (tty_write_sz < TTY_WRITE_SZ_MIN) tty_write_sz = TTY_WRITE_SZ_MIN; \
 	} while (0)
+
+struct tty_q tty_q;
+
+pthread_mutex_t write_q_mutex;
 
 int sig_exit = 0;
 
@@ -241,19 +235,19 @@ static void loop(void)
 	fd_set rdset, wrset;
 	int r;
 	int n;
+	char buff_rd[TTY_RD_SZ];
+	int write_sz;
 
 	tty_q.len = 0;
-
-	/* if (tty_q.len + M_MAXMAP <= TTY_Q_SZ) { */
-		/* n = do_map((char *) tty_q.buff + tty_q.len, opts.omap, c); */
-		/* tty_q.len += n; */
-	/* } */
 
 	while (!sig_exit) {
 		FD_ZERO(&rdset);
 		FD_ZERO(&wrset);
 		FD_SET(tty_fd, &rdset);
+
+		pthread_mutex_lock(&write_q_mutex);
 		if (tty_q.len) FD_SET(tty_fd, &wrset);
+		pthread_mutex_unlock(&write_q_mutex);
 
 		r = select(tty_fd + 1, &rdset, &wrset, NULL, NULL);
 		if (r < 0)  {
@@ -265,8 +259,6 @@ static void loop(void)
 		}
 
 		if (FD_ISSET(tty_fd, &rdset)) {
-			char buff_rd[TTY_RD_SZ];
-
 			/* read from port */
 			do {
 				n = read(tty_fd, &buff_rd, sizeof(buff_rd));
@@ -283,14 +275,15 @@ static void loop(void)
 
 		if (FD_ISSET(tty_fd, &wrset)) {
 			/* write to port */
-			int sz;
-			sz = (tty_q.len < tty_write_sz) ? tty_q.len : tty_write_sz;
+			pthread_mutex_lock(&write_q_mutex);
+			write_sz = (tty_q.len < tty_write_sz) ? tty_q.len : tty_write_sz;
 			do {
-				n = write(tty_fd, tty_q.buff, sz);
+				n = write(tty_fd, tty_q.buff, write_sz);
 			} while (n < 0 && errno == EINTR);
 			if (n <= 0) fatal("write to term failed: %s", strerror(errno));
 			memmove(tty_q.buff, tty_q.buff + n, tty_q.len - n);
 			tty_q.len -= n;
+			pthread_mutex_unlock(&write_q_mutex);
 		}
 	}
 }

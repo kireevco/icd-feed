@@ -51,13 +51,23 @@ static int seriald_send_data(
 		struct ubus_request_data *req, const char *method, struct blob_attr *msg)
 {
 	struct blob_attr *tb[__DATA_MAX];
+	int len;
 
 	blobmsg_parse(data_policy, __DATA_MAX, tb, blob_data(msg), blob_len(msg));
 	if (!tb[DATA_DATA]) return UBUS_STATUS_INVALID_ARGUMENT;
 
 	const char *data = blobmsg_get_string(tb[DATA_DATA]);
+	len = strlen(data);
 
-	DPRINTF("data: [%s]\n", data);
+	pthread_mutex_lock(&write_q_mutex);
+	if (tty_q.len + len < TTY_Q_SZ) {
+		memmove(tty_q.buff + tty_q.len, data, len);
+		tty_q.len += len;
+		tty_q.buff[tty_q.len] = '\n';
+		++tty_q.len;
+	}
+	pthread_mutex_unlock(&write_q_mutex);
+
 	return UBUS_STATUS_OK;
 }
 
