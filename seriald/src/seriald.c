@@ -332,10 +332,25 @@ static void tty_read_line_parser(const int n, const char *buff_rd)
 
 static void tty_read_line_cb(const char *line)
 {
-	char buf[512];
+	int status;
+	pid_t pid;
+	char format[] = "{\"data\": \"%s\"}";
+	char buff[sizeof(format)+TTY_RD_SZ];
 
-	sprintf(buf, "ubus send serial '{\"data\": \"%s\"}'", line);
-	system(buf);
+	sprintf(buff, format, line);
+
+	pid = fork();
+	if (!pid) {
+		if (opts.socket) {
+			execl("/bin/ubus", "ubus", "-s", opts.socket,
+					"send", "serial", buff, (char *) NULL);
+		} else {
+			execl("/bin/ubus", "ubus", "send", "serial", buff, (char *) NULL);
+		}
+		exit(EXIT_FAILURE);
+	} else if (pid > 0) {
+		waitpid(-1, &status, WNOHANG);
+	}
 }
 
 int main(int argc, char *argv[])

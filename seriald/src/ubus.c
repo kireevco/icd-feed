@@ -16,6 +16,8 @@
 static struct ubus_context *ubus_ctx = NULL;
 static struct blob_buf b;
 
+/* TODO: make this work to replace the execl call */
+
 int seriald_ubus_connect(const char *path)
 {
 	ubus_ctx = ubus_connect(path);

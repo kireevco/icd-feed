@@ -14,8 +14,6 @@
 #include "ubus_loop.h"
 #include "seriald.h"
 
-/* TODO: add support for multiple ubus path */
-
 static struct ubus_context *ubus_ctx = NULL;
 static const char *ubus_path;
 
