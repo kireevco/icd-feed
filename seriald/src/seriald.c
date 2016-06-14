@@ -332,8 +332,10 @@ static void tty_read_line_parser(const int n, const char *buff_rd)
 
 static void tty_read_line_cb(const char *line)
 {
-	printf("%s\n", line);
-	return;
+	char buf[512];
+
+	sprintf(buf, "ubus send serial '{\"data\": \"%s\"}'", line);
+	system(buf);
 }
 
 int main(int argc, char *argv[])
