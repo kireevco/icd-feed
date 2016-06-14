@@ -22,6 +22,7 @@
 #include "fdio.h"
 #include "term.h"
 #include "ubus.h"
+#include "ubus_loop.h"
 
 /* TODO: open source */
 /* TODO: support base64 for wrapping the data */
@@ -370,9 +371,9 @@ int main(int argc, char *argv[])
 
 	set_tty_write_sz(term_get_baudrate(tty_fd, NULL));
 
-	if (seriald_ubus_init(opts.socket) < 0) {
+	if (seriald_ubus_loop_init(opts.socket)) {
 		DPRINTF("Failed to connect to ubus\n");
-		return 1;
+		return -EIO;
 	}
 
 	r = pthread_create(&uloop_tid, NULL, &seriald_ubus_loop, NULL);
@@ -380,7 +381,7 @@ int main(int argc, char *argv[])
 
 	loop();
 
-	seriald_ubus_done();
+	seriald_ubus_loop_done();
 
 	return EXIT_SUCCESS;
 }

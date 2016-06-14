@@ -11,12 +11,12 @@
 #include <libubox/utils.h>
 #include <libubus.h>
 
-#include "ubus.h"
+#include "ubus_loop.h"
 #include "seriald.h"
 
 /* TODO: add support for multiple ubus path */
 
-struct ubus_context *ubus_ctx = NULL;
+static struct ubus_context *ubus_ctx = NULL;
 static const char *ubus_path;
 
 static void seriald_ubus_add_fd(void);
@@ -92,7 +92,7 @@ static void seriald_ubus_add_fd(void)
 			fcntl(ubus_ctx->sock.fd, F_GETFD) | FD_CLOEXEC);
 }
 
-int seriald_ubus_init(const char *path)
+int seriald_ubus_loop_init(const char *path)
 {
 	int r;
 
@@ -124,7 +124,7 @@ void *seriald_ubus_loop(void *unused)
 	return 0;
 }
 
-void seriald_ubus_done(void)
+void seriald_ubus_loop_done(void)
 {
 	ubus_free(ubus_ctx);
 }
