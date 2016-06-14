@@ -22,6 +22,46 @@ static const char *ubus_path;
 static void seriald_ubus_add_fd(void);
 static void seriald_ubus_connection_lost_cb(struct ubus_context *ctx);
 static void seriald_ubus_reconnect_timer(struct uloop_timeout *timeout);
+static int seriald_send_data(struct ubus_context *ctx, struct ubus_object *obj,
+		struct ubus_request_data *req, const char *method, struct blob_attr *msg);
+
+enum {
+	DATA_DATA,
+	__DATA_MAX
+};
+
+static const struct blobmsg_policy data_policy[__DATA_MAX] = {
+	[DATA_DATA] = { .name = "data", .type = BLOBMSG_TYPE_STRING },
+};
+
+static struct ubus_method seriald_object_methods[] = {
+	UBUS_METHOD("send", seriald_send_data, data_policy),
+};
+
+static struct ubus_object_type seriald_object_type =
+	UBUS_OBJECT_TYPE("serial", seriald_object_methods);
+
+static struct ubus_object seriald_object = {
+	.name = "serial",
+	.type = &seriald_object_type,
+	.methods = seriald_object_methods,
+	.n_methods = ARRAY_SIZE(seriald_object_methods),
+};
+
+static int seriald_send_data(
+		struct ubus_context *ctx, struct ubus_object *obj,
+		struct ubus_request_data *req, const char *method, struct blob_attr *msg)
+{
+	struct blob_attr *tb[__DATA_MAX];
+
+	blobmsg_parse(data_policy, __DATA_MAX, tb, blob_data(msg), blob_len(msg));
+	if (!tb[DATA_DATA]) return UBUS_STATUS_INVALID_ARGUMENT;
+
+	const char *data = blobmsg_get_string(tb[DATA_DATA]);
+
+	DPRINTF("data: [%s]\n", data);
+	return UBUS_STATUS_OK;
+}
 
 static void seriald_ubus_reconnect_timer(struct uloop_timeout *timeout)
 {
@@ -54,6 +94,8 @@ static void seriald_ubus_add_fd(void)
 
 int seriald_ubus_init(const char *path)
 {
+	int r;
+
 	uloop_init();
 	ubus_path = path;
 
@@ -66,6 +108,12 @@ int seriald_ubus_init(const char *path)
 	DPRINTF("connected as %08x\n", ubus_ctx->local_id);
 	ubus_ctx->connection_lost = seriald_ubus_connection_lost_cb;
 	seriald_ubus_add_fd();
+
+	r = ubus_add_object(ubus_ctx, &seriald_object);
+	if (r) {
+		DPRINTF("Failed to add object: %s\n", ubus_strerror(r));
+		return r;
+	}
 
 	return 0;
 }
