@@ -13,6 +13,9 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <limits.h>
+#include <libubus.h>
+#include <libubox/blobmsg_json.h>
+#include <stdbool.h>
 
 #define _GNU_SOURCE
 #include <getopt.h>
@@ -26,15 +29,21 @@
 /* TODO: open source */
 /* TODO: support base64 for wrapping the data */
 
+static struct ubus_context *ubus_ctx = NULL;
+static struct blob_buf b;
+
 #define STO STDOUT_FILENO
 #define STI STDIN_FILENO
 
 #define TTY_RD_SZ 256
 
 char buff_rd_line[TTY_RD_SZ+1] = "";
+char buff_ubus_send_event_rd_line[TTY_RD_SZ+1] = "";
 
 int tty_fd;
-int efd_send_to_tty;
+int efd_send_to_tty = -1;
+int efd_signal = -1;
+static int pipefd[2];
 
 #define TTY_WRITE_SZ_DIV 10
 #define TTY_WRITE_SZ_MIN 8
@@ -203,6 +212,8 @@ static void deadly_handler(int signum)
 	if (!sig_exit) {
 		seriald_ubus_loop_stop();
 		sig_exit = 1;
+		if (efd_send_to_tty >= 0) eventfd_write(efd_send_to_tty, 1);
+		if (efd_signal >= 0) eventfd_write(efd_signal, 1);
 	}
 }
 
@@ -231,6 +242,108 @@ static void register_signal_handlers(void)
 	sigaction(SIGUSR2, &ign_action, NULL);
 }
 
+static void seriald_ubus_send_event(const char *json)
+{
+	blob_buf_init(&b, 0);
+
+	if (!blobmsg_add_json_from_string(&b, json)) {
+		DPRINTF("cannot parse data for ubus send event\n");
+		return;
+	}
+
+	if (ubus_send_event(ubus_ctx, "serial", b.head)) {
+		ubus_free(ubus_ctx);
+		ubus_ctx = ubus_connect(opts.socket);
+		ubus_send_event(ubus_ctx, "serial", b.head);
+	}
+}
+
+static void ubus_send_event_line_parser(const int n, const char *buff_rd)
+{
+	const char *p;
+	const char *pp;
+	char buff[TTY_RD_SZ+1] = "";
+
+	/* buff_rd isn't null-terminated */
+	strncat(buff, buff_rd, n);
+
+	pp = buff;
+
+	while ((p = strchr(pp, '\n'))) {
+		if (strlen(buff_ubus_send_event_rd_line) + p - pp > TTY_RD_SZ) {
+			seriald_ubus_send_event(buff_ubus_send_event_rd_line);
+			*buff_ubus_send_event_rd_line = '\0';
+		}
+
+		strncat(buff_ubus_send_event_rd_line, pp, p - pp);
+		strchrdel(buff_ubus_send_event_rd_line, '\r');
+		seriald_ubus_send_event(buff_ubus_send_event_rd_line);
+		*buff_ubus_send_event_rd_line = '\0';
+
+		pp = p + 1;
+	}
+
+	if (pp) {
+		if (strlen(buff_ubus_send_event_rd_line) + n - (pp - buff) > TTY_RD_SZ) {
+			seriald_ubus_send_event(buff_ubus_send_event_rd_line);
+			*buff_ubus_send_event_rd_line = '\0';
+		}
+		strncat(buff_ubus_send_event_rd_line, pp, n - (pp - buff));
+		strchrdel(buff_ubus_send_event_rd_line, '\r');
+	}
+}
+
+static void ubus_send_event_loop(void)
+{
+	fd_set rdset;
+	int r;
+	int n;
+	char buff_rd[TTY_RD_SZ];
+	int max_fd;
+	eventfd_t efd_value;
+
+	max_fd = (efd_signal > pipefd[0]) ? efd_signal : pipefd[0];
+
+	ubus_ctx = ubus_connect(opts.socket);
+	if (!ubus_ctx) {
+		fatal("cannot connect to ubus");
+	}
+
+	while (!sig_exit) {
+		FD_ZERO(&rdset);
+		FD_SET(efd_signal, &rdset);
+		FD_SET(pipefd[0], &rdset);
+
+		r = select(max_fd + 1, &rdset, NULL, NULL, NULL);
+		if (r < 0)  {
+			if (errno == EINTR) continue;
+			else fatal("select failed: %d : %s", errno, strerror(errno));
+		}
+
+		if (FD_ISSET(pipefd[0], &rdset)) {
+			/* read from pipe */
+			do {
+				n = read(pipefd[0], &buff_rd, sizeof(buff_rd));
+			} while (n < 0 && errno == EINTR);
+			if (n == 0) {
+				fatal("pipe closed");
+			} else if (n < 0) {
+				if (errno != EAGAIN && errno != EWOULDBLOCK)
+					fatal("read from pipe failed: %s", strerror(errno));
+			} else {
+				ubus_send_event_line_parser(n, buff_rd);
+			}
+		}
+
+		if (FD_ISSET(efd_signal, &rdset)) {
+			/* Being self-piped */
+			if (eventfd_read(efd_send_to_tty, &efd_value)) {
+				fatal("failed to read efd_send_to_tty");
+			}
+		}
+	}
+}
+
 static void loop(void)
 {
 	fd_set rdset, wrset;
@@ -256,11 +369,8 @@ static void loop(void)
 
 		r = select(max_fd + 1, &rdset, &wrset, NULL, NULL);
 		if (r < 0)  {
-			if (errno == EINTR){
-				continue;
-			} else {
-				fatal("select failed: %d : %s", errno, strerror(errno));
-			}
+			if (errno == EINTR) continue;
+			else fatal("select failed: %d : %s", errno, strerror(errno));
 		}
 
 		if (FD_ISSET(tty_fd, &rdset)) {
@@ -337,24 +447,23 @@ static void tty_read_line_parser(const int n, const char *buff_rd)
 
 static void tty_read_line_cb(const char *line)
 {
-	int status;
-	pid_t pid;
-	char format[] = "{\"data\": \"%s\"}";
-	char buff[sizeof(format)+TTY_RD_SZ];
+	char format[] = "{\"data\": \"%s\"}\n";
+	char json[sizeof(format)+TTY_RD_SZ];
+	char *p;
+	int n;
+	int sz;
 
-	sprintf(buff, format, line);
+	sprintf(json, format, line);
+	p = json;
+	sz = strlen(json);
 
-	pid = fork();
-	if (!pid) {
-		if (opts.socket) {
-			execl("/bin/ubus", "ubus", "-s", opts.socket,
-					"send", "serial", buff, (char *) NULL);
-		} else {
-			execl("/bin/ubus", "ubus", "send", "serial", buff, (char *) NULL);
-		}
-		exit(EXIT_FAILURE);
-	} else if (pid > 0) {
-		waitpid(-1, &status, WNOHANG);
+	while (sz > 0) {
+		do {
+			n = write(pipefd[1], p, sz);
+		} while (n < 0 && errno == EINTR);
+		if (n <= 0) fatal("write to pipe failed: %s", strerror(errno));
+		p += n;
+		sz -= n;
 	}
 }
 
@@ -365,7 +474,29 @@ int main(int argc, char *argv[])
 	parse_args(argc, argv);
 	register_signal_handlers();
 
+	r = pipe2(pipefd, O_CLOEXEC);
+	if (r < 0) fatal("cannot create pipe: %s", strerror(errno));
+
+	switch(fork()) {
+		case 0:
+			efd_signal = eventfd(0, EFD_CLOEXEC);
+			if (efd_signal < 0) {
+				fatal("cannot create efd_signal: %s", strerror(errno));
+			}
+			close(pipefd[1]);
+			/* Seems like you cannot have multiple ubus connections in single process. */
+			/* So we fork. */
+			ubus_send_event_loop();
+			break;
+		case -1:
+			fatal("cannot fork ubus_event_loop");
+	}
+
+	close(pipefd[0]);
 	efd_send_to_tty = eventfd(0, EFD_CLOEXEC);
+	if (efd_send_to_tty < 0) {
+		fatal("cannot create efd_send_to_tty: %s", strerror(errno));
+	}
 
 	r = term_lib_init();
 	if (r < 0) fatal("term_init failed: %s", term_strerror(term_errno, errno));
