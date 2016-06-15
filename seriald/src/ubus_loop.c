@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <sys/eventfd.h>
 #include <sys/socket.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -65,6 +66,7 @@ static int seriald_send_data(
 		tty_q.len += len;
 		tty_q.buff[tty_q.len] = '\n';
 		++tty_q.len;
+		eventfd_write(efd_send_to_tty, 1);
 	}
 	pthread_mutex_unlock(&write_q_mutex);
 

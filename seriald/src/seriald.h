@@ -18,4 +18,6 @@ extern struct tty_q tty_q;
 extern pthread_mutex_t write_q_mutex;
 void fatal(const char *format, ...);
 
+extern int efd_send_to_tty;
+
 #endif /* __SERIALD_H */

@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/eventfd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -34,6 +35,7 @@
 char buff_rd_line[TTY_RD_SZ+1] = "";
 
 int tty_fd;
+int efd_send_to_tty;
 
 #define TTY_WRITE_SZ_DIV 10
 #define TTY_WRITE_SZ_MIN 8
@@ -237,19 +239,23 @@ static void loop(void)
 	int n;
 	char buff_rd[TTY_RD_SZ];
 	int write_sz;
+	int max_fd;
+	eventfd_t efd_value;
 
+	max_fd = (tty_fd > efd_send_to_tty) ? tty_fd : efd_send_to_tty;
 	tty_q.len = 0;
 
 	while (!sig_exit) {
 		FD_ZERO(&rdset);
 		FD_ZERO(&wrset);
 		FD_SET(tty_fd, &rdset);
+		FD_SET(efd_send_to_tty, &rdset);
 
 		pthread_mutex_lock(&write_q_mutex);
 		if (tty_q.len) FD_SET(tty_fd, &wrset);
 		pthread_mutex_unlock(&write_q_mutex);
 
-		r = select(tty_fd + 1, &rdset, &wrset, NULL, NULL);
+		r = select(max_fd + 1, &rdset, &wrset, NULL, NULL);
 		if (r < 0)  {
 			if (errno == EINTR){
 				continue;
@@ -270,6 +276,13 @@ static void loop(void)
 					fatal("read from term failed: %s", strerror(errno));
 			} else {
 				tty_read_line_parser(n, buff_rd);
+			}
+		}
+
+		if (FD_ISSET(efd_send_to_tty, &rdset)) {
+			/* Being notified we have something to write to TTY */
+			if (eventfd_read(efd_send_to_tty, &efd_value)) {
+				fatal("failed to read efd_send_to_tty");
 			}
 		}
 
@@ -352,6 +365,8 @@ int main(int argc, char *argv[])
 
 	parse_args(argc, argv);
 	register_signal_handlers();
+
+	efd_send_to_tty = eventfd(0, EFD_CLOEXEC);
 
 	r = term_lib_init();
 	if (r < 0) fatal("term_init failed: %s", term_strerror(term_errno, errno));
