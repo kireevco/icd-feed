@@ -21,7 +21,6 @@
 #include "strutils.h"
 #include "fdio.h"
 #include "term.h"
-#include "ubus.h"
 #include "ubus_loop.h"
 
 /* TODO: open source */
