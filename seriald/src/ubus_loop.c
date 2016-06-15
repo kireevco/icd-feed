@@ -136,3 +136,8 @@ void seriald_ubus_loop_done(void)
 {
 	ubus_free(ubus_ctx);
 }
+
+void seriald_ubus_loop_stop(void)
+{
+	uloop_end();
+}

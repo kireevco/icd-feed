@@ -200,8 +200,8 @@ static void deadly_handler(int signum)
 {
 	DPRINTF("seriald is signaled with TERM\n");
 	if (!sig_exit) {
+		seriald_ubus_loop_stop();
 		sig_exit = 1;
-		kill(0, SIGTERM);
 	}
 }
 
