@@ -26,8 +26,11 @@ define Build/Prepare
 endef
 
 define Package/seriald/install
+	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/sbin
+
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/seriald $(1)/sbin/
+	$(CP) ./files/* $(1)
 endef
 
 $(eval $(call BuildPackage,seriald))
