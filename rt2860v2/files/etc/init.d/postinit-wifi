@@ -1,0 +1,10 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2016 Rosonix Technology, Inc.
+
+START=22
+
+boot() {
+	# I don’t know what’s going on with the Wi-Fi. It seems like need to
+	# be init again in order to start using it.
+	wifi
+}
