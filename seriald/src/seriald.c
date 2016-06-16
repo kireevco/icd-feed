@@ -486,7 +486,7 @@ int main(int argc, char *argv[])
 			close(pipefd[1]);
 			/* Seems like you cannot have multiple ubus connections in single process. */
 			/* So we fork. */
-			ubus_send_event_loop();
+			return ubus_send_event_loop();
 			break;
 		case -1:
 			fatal("cannot fork ubus_event_loop");
