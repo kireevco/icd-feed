@@ -9,15 +9,21 @@
 #define TTY_Q_SZ 1024
 #endif
 
+#define TTY_RD_SZ 256
+
 struct tty_q {
 	int len;
 	char buff[TTY_Q_SZ];
 } tty_q;
 
 extern struct tty_q tty_q;
-extern pthread_mutex_t write_q_mutex;
+extern pthread_mutex_t tty_q_mutex;
 void fatal(const char *format, ...);
 
-extern int efd_send_to_tty;
+extern int sig_exit;
+
+extern int efd_notify_tty;
+extern int efd_signal;
+extern int ubus_pipefd[];
 
 #endif /* __SERIALD_H */

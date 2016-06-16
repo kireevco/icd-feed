@@ -1,19 +1,17 @@
 #define _GNU_SOURCE
-#include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <sys/eventfd.h>
-#include <sys/socket.h>
 #include <errno.h>
 #include <fcntl.h>
-
+#include <stdio.h>
+#include <string.h>
+#include <sys/eventfd.h>
+#include <sys/socket.h>
 #include <libubox/uloop.h>
 #include <libubox/ustream.h>
 #include <libubox/utils.h>
 #include <libubus.h>
 
-#include "ubus_loop.h"
 #include "seriald.h"
+#include "ubus_loop.h"
 
 static struct ubus_context *ubus_ctx = NULL;
 static const char *ubus_path;
@@ -60,15 +58,15 @@ static int seriald_send_data(
 	const char *data = blobmsg_get_string(tb[DATA_DATA]);
 	len = strlen(data);
 
-	pthread_mutex_lock(&write_q_mutex);
+	pthread_mutex_lock(&tty_q_mutex);
 	if (tty_q.len + len < TTY_Q_SZ) {
 		memmove(tty_q.buff + tty_q.len, data, len);
 		tty_q.len += len;
 		tty_q.buff[tty_q.len] = '\n';
 		++tty_q.len;
-		eventfd_write(efd_send_to_tty, 1);
+		eventfd_write(efd_notify_tty, 1);
 	}
-	pthread_mutex_unlock(&write_q_mutex);
+	pthread_mutex_unlock(&tty_q_mutex);
 
 	return UBUS_STATUS_OK;
 }

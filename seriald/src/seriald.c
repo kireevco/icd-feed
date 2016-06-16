@@ -1,85 +1,45 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#define _GNU_SOURCE
 #include <ctype.h>
 #include <errno.h>
-#include <assert.h>
-#include <stdarg.h>
-#include <signal.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <getopt.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/eventfd.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <limits.h>
-#include <libubus.h>
-#include <libubox/blobmsg_json.h>
-#include <stdbool.h>
+#include <unistd.h>
 
-#define _GNU_SOURCE
-#include <getopt.h>
-
+#include "fdio.h"
 #include "seriald.h"
 #include "strutils.h"
-#include "fdio.h"
 #include "term.h"
+#include "ubus.h"
 #include "ubus_loop.h"
 
-/* TODO: open source */
-/* TODO: support base64 for wrapping the data */
-
-static struct ubus_context *ubus_ctx = NULL;
-static struct blob_buf b;
+int efd_notify_tty = -1;
+int efd_signal = -1;
+int ubus_pipefd[2];
+static int fd_tty;
 
 #define STO STDOUT_FILENO
 #define STI STDIN_FILENO
-
-#define TTY_RD_SZ 256
-
-char buff_rd_line[TTY_RD_SZ+1] = "";
-char buff_ubus_send_event_rd_line[TTY_RD_SZ+1] = "";
-
-int tty_fd;
-int efd_send_to_tty = -1;
-int efd_signal = -1;
-static int pipefd[2];
-
 #define TTY_WRITE_SZ_DIV 10
 #define TTY_WRITE_SZ_MIN 8
-
 int tty_write_sz;
-
 #define set_tty_write_sz(baud) \
 	do { \
 		tty_write_sz = (baud) / TTY_WRITE_SZ_DIV; \
 		if (tty_write_sz < TTY_WRITE_SZ_MIN) tty_write_sz = TTY_WRITE_SZ_MIN; \
 	} while (0)
-
 struct tty_q tty_q;
-
-pthread_mutex_t write_q_mutex;
+pthread_mutex_t tty_q_mutex;
 
 int sig_exit = 0;
 
-/* parity modes names */
-const char *parity_str[] = {
-	[P_NONE] = "none",
-	[P_EVEN] = "even",
-	[P_ODD] = "odd",
-	[P_MARK] = "mark",
-	[P_SPACE] = "space",
-};
-
-/* flow control modes names */
-const char *flow_str[] = {
-	[FC_NONE] = "none",
-	[FC_RTSCTS] = "RTS/CTS",
-	[FC_XONXOFF] = "xon/xoff",
-	[FC_OTHER] = "other",
-};
-
-struct {
+static struct {
 	char port[128];
 	int baud;
 	enum flowcntrl_e flow;
@@ -90,7 +50,7 @@ struct {
 	char *socket;
 } opts = {
 	.port = "",
-	.baud = 9600,
+	.baud = 115200,
 	.flow = FC_NONE,
 	.parity = P_NONE,
 	.databits = 8,
@@ -98,8 +58,6 @@ struct {
 	.noreset = 0,
 	.socket = NULL, /* the library fall back to default socket when it is NULL */
 };
-
-static pthread_t uloop_tid;
 
 static void show_usage(void);
 static void parse_args(int argc, char *argv[]);
@@ -112,14 +70,23 @@ int main(int argc, char *argv[]);
 
 static void show_usage()
 {
-	printf("usage: seriald [options] <TTY device>\n");
+	printf("Usage: seriald [options] <TTY device>\n");
 	printf("\n");
-	printf("options:\n");
+	printf("Options:\n");
 	printf("  -b <baudrate>\n");
 	printf("    baudrate should be one of: 0, 50, 75, 110, 134, 150, 200, 300, 600,\n");
 	printf("    1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400\n");
+	printf("    default to 115200\n");
 	printf("  -f s (=soft) | h (=hard) | n (=none)\n");
-	printf("  -s <ubus socket> (no need to give if you use the default one)");
+	printf("    default to n\n");
+	printf("  -s <ubus socket>\n");
+	printf("    no need to give if you use the default one\n");
+	printf("\n");
+	printf("Examples:\n");
+	printf("  Get data:\n");
+	printf("    ubus listen serial\n");
+	printf("  Send data (replace <data> with the data you want to send):\n");
+	printf("    ubus call serial send '{\"data\": \"<data>\"}'\n");
 }
 
 void fatal(const char *format, ...)
@@ -212,7 +179,7 @@ static void deadly_handler(int signum)
 	if (!sig_exit) {
 		seriald_ubus_loop_stop();
 		sig_exit = 1;
-		if (efd_send_to_tty >= 0) eventfd_write(efd_send_to_tty, 1);
+		if (efd_notify_tty >= 0) eventfd_write(efd_notify_tty, 1);
 		if (efd_signal >= 0) eventfd_write(efd_signal, 1);
 	}
 }
@@ -242,108 +209,6 @@ static void register_signal_handlers(void)
 	sigaction(SIGUSR2, &ign_action, NULL);
 }
 
-static void seriald_ubus_send_event(const char *json)
-{
-	blob_buf_init(&b, 0);
-
-	if (!blobmsg_add_json_from_string(&b, json)) {
-		DPRINTF("cannot parse data for ubus send event\n");
-		return;
-	}
-
-	if (ubus_send_event(ubus_ctx, "serial", b.head)) {
-		ubus_free(ubus_ctx);
-		ubus_ctx = ubus_connect(opts.socket);
-		ubus_send_event(ubus_ctx, "serial", b.head);
-	}
-}
-
-static void ubus_send_event_line_parser(const int n, const char *buff_rd)
-{
-	const char *p;
-	const char *pp;
-	char buff[TTY_RD_SZ+1] = "";
-
-	/* buff_rd isn't null-terminated */
-	strncat(buff, buff_rd, n);
-
-	pp = buff;
-
-	while ((p = strchr(pp, '\n'))) {
-		if (strlen(buff_ubus_send_event_rd_line) + p - pp > TTY_RD_SZ) {
-			seriald_ubus_send_event(buff_ubus_send_event_rd_line);
-			*buff_ubus_send_event_rd_line = '\0';
-		}
-
-		strncat(buff_ubus_send_event_rd_line, pp, p - pp);
-		strchrdel(buff_ubus_send_event_rd_line, '\r');
-		seriald_ubus_send_event(buff_ubus_send_event_rd_line);
-		*buff_ubus_send_event_rd_line = '\0';
-
-		pp = p + 1;
-	}
-
-	if (pp) {
-		if (strlen(buff_ubus_send_event_rd_line) + n - (pp - buff) > TTY_RD_SZ) {
-			seriald_ubus_send_event(buff_ubus_send_event_rd_line);
-			*buff_ubus_send_event_rd_line = '\0';
-		}
-		strncat(buff_ubus_send_event_rd_line, pp, n - (pp - buff));
-		strchrdel(buff_ubus_send_event_rd_line, '\r');
-	}
-}
-
-static void ubus_send_event_loop(void)
-{
-	fd_set rdset;
-	int r;
-	int n;
-	char buff_rd[TTY_RD_SZ];
-	int max_fd;
-	eventfd_t efd_value;
-
-	max_fd = (efd_signal > pipefd[0]) ? efd_signal : pipefd[0];
-
-	ubus_ctx = ubus_connect(opts.socket);
-	if (!ubus_ctx) {
-		fatal("cannot connect to ubus");
-	}
-
-	while (!sig_exit) {
-		FD_ZERO(&rdset);
-		FD_SET(efd_signal, &rdset);
-		FD_SET(pipefd[0], &rdset);
-
-		r = select(max_fd + 1, &rdset, NULL, NULL, NULL);
-		if (r < 0)  {
-			if (errno == EINTR) continue;
-			else fatal("select failed: %d : %s", errno, strerror(errno));
-		}
-
-		if (FD_ISSET(pipefd[0], &rdset)) {
-			/* read from pipe */
-			do {
-				n = read(pipefd[0], &buff_rd, sizeof(buff_rd));
-			} while (n < 0 && errno == EINTR);
-			if (n == 0) {
-				fatal("pipe closed");
-			} else if (n < 0) {
-				if (errno != EAGAIN && errno != EWOULDBLOCK)
-					fatal("read from pipe failed: %s", strerror(errno));
-			} else {
-				ubus_send_event_line_parser(n, buff_rd);
-			}
-		}
-
-		if (FD_ISSET(efd_signal, &rdset)) {
-			/* Being self-piped */
-			if (eventfd_read(efd_send_to_tty, &efd_value)) {
-				fatal("failed to read efd_send_to_tty");
-			}
-		}
-	}
-}
-
 static void loop(void)
 {
 	fd_set rdset, wrset;
@@ -354,18 +219,18 @@ static void loop(void)
 	int max_fd;
 	eventfd_t efd_value;
 
-	max_fd = (tty_fd > efd_send_to_tty) ? tty_fd : efd_send_to_tty;
+	max_fd = (fd_tty > efd_notify_tty) ? fd_tty : efd_notify_tty;
 	tty_q.len = 0;
 
 	while (!sig_exit) {
 		FD_ZERO(&rdset);
 		FD_ZERO(&wrset);
-		FD_SET(tty_fd, &rdset);
-		FD_SET(efd_send_to_tty, &rdset);
+		FD_SET(fd_tty, &rdset);
+		FD_SET(efd_notify_tty, &rdset);
 
-		pthread_mutex_lock(&write_q_mutex);
-		if (tty_q.len) FD_SET(tty_fd, &wrset);
-		pthread_mutex_unlock(&write_q_mutex);
+		pthread_mutex_lock(&tty_q_mutex);
+		if (tty_q.len) FD_SET(fd_tty, &wrset);
+		pthread_mutex_unlock(&tty_q_mutex);
 
 		r = select(max_fd + 1, &rdset, &wrset, NULL, NULL);
 		if (r < 0)  {
@@ -373,10 +238,10 @@ static void loop(void)
 			else fatal("select failed: %d : %s", errno, strerror(errno));
 		}
 
-		if (FD_ISSET(tty_fd, &rdset)) {
+		if (FD_ISSET(fd_tty, &rdset)) {
 			/* read from port */
 			do {
-				n = read(tty_fd, &buff_rd, sizeof(buff_rd));
+				n = read(fd_tty, &buff_rd, sizeof(buff_rd));
 			} while (n < 0 && errno == EINTR);
 			if (n == 0) {
 				fatal("term closed");
@@ -388,30 +253,31 @@ static void loop(void)
 			}
 		}
 
-		if (FD_ISSET(efd_send_to_tty, &rdset)) {
+		if (FD_ISSET(efd_notify_tty, &rdset)) {
 			/* Being notified we have something to write to TTY */
-			if (eventfd_read(efd_send_to_tty, &efd_value)) {
-				fatal("failed to read efd_send_to_tty");
+			if (eventfd_read(efd_notify_tty, &efd_value)) {
+				fatal("failed to read efd_notify_tty");
 			}
 		}
 
-		if (FD_ISSET(tty_fd, &wrset)) {
+		if (FD_ISSET(fd_tty, &wrset)) {
 			/* write to port */
-			pthread_mutex_lock(&write_q_mutex);
+			pthread_mutex_lock(&tty_q_mutex);
 			write_sz = (tty_q.len < tty_write_sz) ? tty_q.len : tty_write_sz;
 			do {
-				n = write(tty_fd, tty_q.buff, write_sz);
+				n = write(fd_tty, tty_q.buff, write_sz);
 			} while (n < 0 && errno == EINTR);
 			if (n <= 0) fatal("write to term failed: %s", strerror(errno));
 			memmove(tty_q.buff, tty_q.buff + n, tty_q.len - n);
 			tty_q.len -= n;
-			pthread_mutex_unlock(&write_q_mutex);
+			pthread_mutex_unlock(&tty_q_mutex);
 		}
 	}
 }
 
 static void tty_read_line_parser(const int n, const char *buff_rd)
 {
+	static char line_buff[TTY_RD_SZ+1] = "";
 	const char *p;
 	const char *pp;
 	char buff[TTY_RD_SZ+1] = "";
@@ -422,26 +288,26 @@ static void tty_read_line_parser(const int n, const char *buff_rd)
 	pp = buff;
 
 	while ((p = strchr(pp, '\n'))) {
-		if (strlen(buff_rd_line) + p - pp > TTY_RD_SZ) {
-			tty_read_line_cb(buff_rd_line);
-			*buff_rd_line = '\0';
+		if (strlen(line_buff) + p - pp > TTY_RD_SZ) {
+			tty_read_line_cb(line_buff);
+			*line_buff = '\0';
 		}
 
-		strncat(buff_rd_line, pp, p - pp);
-		strchrdel(buff_rd_line, '\r');
-		tty_read_line_cb(buff_rd_line);
-		*buff_rd_line = '\0';
+		strncat(line_buff, pp, p - pp);
+		strchrdel(line_buff, '\r');
+		tty_read_line_cb(line_buff);
+		*line_buff = '\0';
 
 		pp = p + 1;
 	}
 
 	if (pp) {
-		if (strlen(buff_rd_line) + n - (pp - buff) > TTY_RD_SZ) {
-			tty_read_line_cb(buff_rd_line);
-			*buff_rd_line = '\0';
+		if (strlen(line_buff) + n - (pp - buff) > TTY_RD_SZ) {
+			tty_read_line_cb(line_buff);
+			*line_buff = '\0';
 		}
-		strncat(buff_rd_line, pp, n - (pp - buff));
-		strchrdel(buff_rd_line, '\r');
+		strncat(line_buff, pp, n - (pp - buff));
+		strchrdel(line_buff, '\r');
 	}
 }
 
@@ -459,7 +325,7 @@ static void tty_read_line_cb(const char *line)
 
 	while (sz > 0) {
 		do {
-			n = write(pipefd[1], p, sz);
+			n = write(ubus_pipefd[1], p, sz);
 		} while (n < 0 && errno == EINTR);
 		if (n <= 0) fatal("write to pipe failed: %s", strerror(errno));
 		p += n;
@@ -470,41 +336,43 @@ static void tty_read_line_cb(const char *line)
 int main(int argc, char *argv[])
 {
 	int r;
+	pthread_t uloop_tid;
 
 	parse_args(argc, argv);
 	register_signal_handlers();
 
-	r = pipe2(pipefd, O_CLOEXEC);
-	if (r < 0) fatal("cannot create pipe: %s", strerror(errno));
+	r = pipe2(ubus_pipefd, O_CLOEXEC);
+	if (r < 0) fatal("cannot create pipe to ubus: %s", strerror(errno));
 
+	/* Seems like you cannot have multiple ubus connections in single process. */
+	/* So we fork. */
 	switch(fork()) {
 		case 0:
 			efd_signal = eventfd(0, EFD_CLOEXEC);
 			if (efd_signal < 0) {
 				fatal("cannot create efd_signal: %s", strerror(errno));
 			}
-			close(pipefd[1]);
-			/* Seems like you cannot have multiple ubus connections in single process. */
-			/* So we fork. */
-			return ubus_send_event_loop();
-			break;
+			close(ubus_pipefd[1]);
+			seriald_ubus_run(opts.socket);
+			return EXIT_SUCCESS;
 		case -1:
 			fatal("cannot fork ubus_event_loop");
 	}
 
-	close(pipefd[0]);
-	efd_send_to_tty = eventfd(0, EFD_CLOEXEC);
-	if (efd_send_to_tty < 0) {
-		fatal("cannot create efd_send_to_tty: %s", strerror(errno));
+	close(ubus_pipefd[0]);
+
+	efd_notify_tty = eventfd(0, EFD_CLOEXEC);
+	if (efd_notify_tty < 0) {
+		fatal("cannot create efd_notify_tty: %s", strerror(errno));
 	}
 
 	r = term_lib_init();
 	if (r < 0) fatal("term_init failed: %s", term_strerror(term_errno, errno));
 
-	tty_fd = open(opts.port, O_RDWR | O_NONBLOCK | O_NOCTTY);
-	if (tty_fd < 0) fatal("cannot open %s: %s", opts.port, strerror(errno));
+	fd_tty = open(opts.port, O_RDWR | O_NONBLOCK | O_NOCTTY);
+	if (fd_tty < 0) fatal("cannot open %s: %s", opts.port, strerror(errno));
 
-	r = term_set(tty_fd,
+	r = term_set(fd_tty,
 			1,              /* raw mode. */
 			opts.baud,      /* baud rate. */
 			opts.parity,    /* parity. */
@@ -518,18 +386,16 @@ int main(int argc, char *argv[])
 				opts.port, term_strerror(term_errno, errno));
 	}
 
-	r = term_apply(tty_fd, 0);
+	r = term_apply(fd_tty, 0);
 	if (r < 0) {
 		fatal("failed to config device %s: %s",
 				opts.port, term_strerror(term_errno, errno));
 	}
 
-	set_tty_write_sz(term_get_baudrate(tty_fd, NULL));
+	set_tty_write_sz(term_get_baudrate(fd_tty, NULL));
 
-	if (seriald_ubus_loop_init(opts.socket)) {
-		DPRINTF("Failed to connect to ubus\n");
-		return -EIO;
-	}
+	r = seriald_ubus_loop_init(opts.socket);
+	if (r) fatal("failed to connect to ubus");
 
 	r = pthread_create(&uloop_tid, NULL, &seriald_ubus_loop, NULL);
 	if (r) fatal("can't create thread for uloop: %s", strerror(r));
@@ -537,6 +403,5 @@ int main(int argc, char *argv[])
 	loop();
 
 	seriald_ubus_loop_done();
-
 	return EXIT_SUCCESS;
 }

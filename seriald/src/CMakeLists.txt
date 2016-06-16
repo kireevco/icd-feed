@@ -13,7 +13,7 @@ FIND_LIBRARY(blob_library NAMES blobmsg_json)
 FIND_LIBRARY(json NAMES json-c json)
 FIND_LIBRARY(ubus NAMES ubus)
 
-ADD_EXECUTABLE(seriald seriald.c strutils.c term.c fdio.c ubus_loop.c)
+ADD_EXECUTABLE(seriald seriald.c strutils.c term.c fdio.c ubus.c ubus_loop.c)
 TARGET_LINK_LIBRARIES(seriald ${ubus} ${ubox_library} ${blob_library} ${json})
 
 INSTALL(TARGETS seriald
