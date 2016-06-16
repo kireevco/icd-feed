@@ -39,7 +39,7 @@ In the Ubuntu system, open the *Terminal* application and type the following com
     cp feeds.conf.default feeds.conf
     ```
 
-4. Add the LinkIt Smart 7688 feed:
+4. Add the I2CD feed:
 
     ```
     echo src-git i2cd git@bitbucket.org:rosonix/i2cd-feed.git >> feeds.conf
