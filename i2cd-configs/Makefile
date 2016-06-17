@@ -31,6 +31,8 @@ define Build/Compile
 endef
 
 define Build/Install
+	rm -rf /tmp/vol
+	$(CP) ./host/tmp/* /tmp
 endef
 
 $(eval $(call BuildPackage,i2cd-configs))
