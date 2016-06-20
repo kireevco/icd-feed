@@ -3,11 +3,15 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=rt2860v2
 
-PKG_REV:=2714
+PKG_REV:=2.7.14
 PKG_VERSION:=r$(PKG_REV)
-PKG_RELEASE:=6
 
-PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_RELEASE=$(PKG_SOURCE_VERSION)
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=git@bitbucket.org:rosonix/rt2860v2.git
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE_VERSION:=f13603ed645f6df5f8082894713d39fa426c974f
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -77,11 +81,6 @@ MAKEOPTS:= -C $(LINUX_DIR) \
 	CONFIG_RT2860V2_AP=m \
 	$(foreach c, $(PKG_KCONFIG),$(if $(CONFIG_$c),CONFIG_$(c)=y)) \
 	modules
-
-define Build/Prepare
-	$(call Build/Prepare/Default)
-	$(CP) -r ./src/. $(PKG_BUILD_DIR)
-endef
 
 define Build/Compile
 	$(MAKE) $(MAKEOPTS)
