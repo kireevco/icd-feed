@@ -4,10 +4,27 @@ START=20
 STOP=90
 
 USE_PROCD=1
+PROG="/sbin/seriald"
 
-start_service() {
+seriald_instance() {
+	config_get baud "$1" baud
+	config_get device "$1" device
+	config_get flow "$1" flow
+	config_get socket "$1" socket
+
+	[ -n "$device" ] || return
+
 	procd_open_instance
-	procd_set_param command /sbin/seriald -b115200 -fh /dev/ttyS0
+	procd_set_param command "$PROG"
+	[ -n "$baud" ] && procd_append_param command -b "$baud"
+	[ -n "$flow" ] && procd_append_param command -f "$flow"
+	[ -n "$socket" ] && procd_append_param command -s "$socket"
+	procd_append_param command "$device"
 	procd_set_param respawn
 	procd_close_instance
+}
+
+start_service() {
+	config_load serial
+	config_foreach seriald_instance serial
 }

@@ -1,0 +1,10 @@
+cat > /etc/config/serial << EOF
+
+config serial
+	option baud   '115200'
+	option device '/dev/ttyS0'
+	option flow   'h'
+	option socket ''
+EOF
+
+exit 0
