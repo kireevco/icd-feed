@@ -18,7 +18,7 @@ include $(INCLUDE_DIR)/cmake.mk
 define Package/seriald
 	SECTION:=base
 	CATEGORY:=Base system
-	DEPENDS:=+libubus +ubus +ubusd
+	DEPENDS:=+libubox +libubus +ubus +ubusd
 	TITLE:=seriald
 	DEFAULT:=y
 endef
