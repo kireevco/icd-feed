@@ -33,16 +33,13 @@ In the Ubuntu system, open the *Terminal* application and type the following com
 
     ```
     cd /path/to/openwrt
-    ```
-
-    ```
     cp feeds.conf.default feeds.conf
     ```
 
 4. Add the I2CD feed:
 
     ```
-    echo src-git i2cd git@bitbucket.org:rosonix/i2cd-feed.git >> feeds.conf
+    echo src-git i2cd git@github.com:Rosonix/I2CD-feed.git >> feeds.conf
     ```
 
 5. Update the feed information of all available packages for building the firmware:
@@ -69,10 +66,11 @@ In the Ubuntu system, open the *Terminal* application and type the following com
     cp feeds/i2cd/dts/I2CD.dts target/linux/ramips/dts
     ```
 
-9. Import the key
+9. Import the key (optional)
 
     ```
-    cp feeds/i2cd/key/key-build feeds/i2cd/key/key-build.pub .
+    git archive --remote=ssh://git@bitbucket.org/rosonix/openwrt-build-key.git master key-build | tar -x
+    git archive --remote=ssh://git@bitbucket.org/rosonix/openwrt-build-key.git master key-build.pub | tar -x
     ```
 
 10. Start the compilation process:
