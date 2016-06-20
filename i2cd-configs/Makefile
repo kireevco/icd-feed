@@ -24,7 +24,7 @@ define Package/i2cd-configs/install
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_DIR) $(1)/usr/share/rt2860v2
 
-	$(CP) ./files/* $(1)
+	$(CP) -Pr ./files/* $(1)
 endef
 
 define Build/Compile

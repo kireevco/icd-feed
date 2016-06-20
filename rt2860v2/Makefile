@@ -91,7 +91,7 @@ define KernelPackage/rt2860v2/install
 	$(INSTALL_DIR) $(1)/lib/wifi
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_DIR) $(1)/usr/share/rt2860v2
-	$(CP) -r ./files/* $(1)
+	$(CP) -Pr ./files/* $(1)
 endef
 
 $(eval $(call KernelPackage,rt2860v2))

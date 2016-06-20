@@ -64,7 +64,7 @@ endef
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/include/iwinfo
 	$(CP) $(PKG_BUILD_DIR)/include/iwinfo.h $(1)/usr/include/
-	$(CP) $(PKG_BUILD_DIR)/include/iwinfo/* $(1)/usr/include/iwinfo/
+	$(CP) -Pr $(PKG_BUILD_DIR)/include/iwinfo/* $(1)/usr/include/iwinfo/
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/libiwinfo.so $(1)/usr/lib/libiwinfo.so
 	$(INSTALL_DIR) $(1)/usr/lib/lua
@@ -76,7 +76,7 @@ define Package/mtk-wifi-sdk/install
 	$(INSTALL_DIR) $(1)/lib
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/iwinfo $(1)/usr/bin/iwinfo.rt
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/libiwinfo.so $(1)/lib/libiwinfo.so
-	$(CP) ./files/* $(1)
+	$(CP) -Pr ./files/* $(1)
 endef
 
 $(eval $(call BuildPackage,mtk-wifi-sdk))
