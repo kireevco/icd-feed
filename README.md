@@ -82,3 +82,8 @@ In the Ubuntu system, open the *Terminal* application and type the following com
     ```
 
 11. After the build process completes, the resulted firmware file will be at `bin/ramips/openwrt-ramips-mt7620-i2cd-squashfs-sysupgrade.bin`. Depending on the H/W resources of the host environment, the build process may **take more than 2 hours**.
+
+
+## License
+
+Except where otherwise noted, all parts of this software is licensed under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html).
