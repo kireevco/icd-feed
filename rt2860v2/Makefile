@@ -70,7 +70,7 @@ endef
 
 define KernelPackage/rt2860v2/config
 	if PACKAGE_kmod-rt2860v2
-		source "$(SOURCE)/src/rt2860v2_ap/Kconfig"
+		source "$(SOURCE)/Kconfig.in"
 	endif
 endef
 
