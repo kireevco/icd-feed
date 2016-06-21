@@ -4,28 +4,37 @@
 
 logger "$BUTTON pressed for $SEEN seconds"
 
+click_folder="/lib/rc.button/${BUTTON}/on-click.d"
+long_click_folder="/lib/rc.button/${BUTTON}/on-long-click.d"
+ext_click_folder="/tmp/vol/2/lib/rc.button/${BUTTON}/on-click.d"
+ext_long_click_folder="/tmp/vol/2/lib/rc.button/${BUTTON}/on-long-click.d"
+
 if [ $SEEN -ge 10 ]; then
-	for f in $(ls /tmp/vol/2/lib/rc.button/$BUTTON/on-long-click.d); do
-		[ -x "/tmp/vol/2/lib/rc.button/$BUTTON/on-long-click.d/$f" ] && \
-				"/tmp/vol/2/lib/rc.button/$BUTTON/on-long-click.d/$f"
-	done &
-
-	sleep 10
-
-	for f in $(ls /lib/rc.button/$BUTTON/on-long-click.d); do
-		[ -x "/lib/rc.button/$BUTTON/on-long-click.d/$f" ] && \
-				"/lib/rc.button/$BUTTON/on-long-click.d/$f"
-	done
+  if [ -d "$ext_long_click_folder" \
+      -a -n "$(ls -A "${ext_long_click_folder}/"* 2>/dev/null || true)" ]; then
+    for f in "${ext_long_click_folder}/"*; do
+      [ -x "$f" ] && "$f"
+    done &
+    sleep 10
+  fi
+  if [ -d "$long_click_folder" \
+      -a -n "$(ls -A "${long_click_folder}/"* 2>/dev/null || true)" ]; then
+    for f in "${long_click_folder}/"*; do
+      [ -x "$f" ] && "$f"
+    done
+  fi
 else
-	for f in $(ls /tmp/vol/2/lib/rc.button/$BUTTON/on-click.d); do
-		[ -x "/tmp/vol/2/lib/rc.button/$BUTTON/on-click.d/$f" ] && \
-				"/tmp/vol/2/lib/rc.button/$BUTTON/on-click.d/$f"
-	done &
-
-	sleep 10
-
-	for f in $(ls /lib/rc.button/$BUTTON/on-click.d); do
-		[ -x "/lib/rc.button/$BUTTON/on-click.d/$f" ] && \
-				"/lib/rc.button/$BUTTON/on-click.d/$f"
-	done
+  if [ -d "$ext_click_folder" \
+      -a -n "$(ls -A "${ext_click_folder}/"* 2>/dev/null || true)" ]; then
+    for f in "${ext_click_folder}/"*; do
+      [ -x "$f" ] && "$f"
+    done &
+    sleep 10
+  fi
+  if [ -d "$click_folder" \
+      -a -n "$(ls -A "${click_folder}/"* 2>/dev/null || true)" ]; then
+    for f in "${click_folder}/"*; do
+      [ -x "$f" ] && "$f"
+    done
+  fi
 fi
