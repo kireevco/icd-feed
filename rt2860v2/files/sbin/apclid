@@ -75,7 +75,7 @@ while true; do
 	ifconfig $iface up
 
 	# Wait for station to connect to the AP
-	for i in $(seq 1 $MAX_INTERVAL); do
+	for i in $(seq $MAX_INTERVAL); do
 		if ! iwconfig apcli0 | grep -q 'Not-Associated'; then
 			break
 		fi
