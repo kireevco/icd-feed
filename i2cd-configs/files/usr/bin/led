@@ -1,0 +1,99 @@
+#!/bin/sh
+
+color="$1"
+style="$2"
+speed="$3"
+
+ubus_path="serial.ttyS0"
+
+usage() {
+  cat << EOF
+led <color> [<style> [<speed>]]
+
+color:
+  red, yellow, green, cyan, blue, magenta, off
+  default: off
+style:
+  solid, blinking
+  default: solid
+speed (especially for blinking):
+  fast, slow
+  default: slow
+EOF
+}
+
+drain() {
+  ubus call "$ubus_path" send "{\"data\": \"\"}"
+}
+
+_ledctl() {
+  local color="$1"
+  local speed="$2"
+  [ -n "$speed" ] || speed=0
+
+  local cmd='$00,00,FFFFFFFFFFFFFFFF,C001,0C00,FF,FF,FFFF,E3,'
+
+  case "$color" in
+  red)
+    cmd="${cmd}11"
+    ;;
+  yellow)
+    cmd="${cmd}14"
+    ;;
+  green)
+    cmd="${cmd}12"
+    ;;
+  cyan)
+    cmd="${cmd}16"
+    ;;
+  blue)
+    cmd="${cmd}13"
+    ;;
+  magenta)
+    cmd="${cmd}15"
+    ;;
+  off)
+    cmd="${cmd}10"
+    ;;
+  *)
+    echo "ERROR: unsupport color: $color"
+    return 1
+    ;;
+  esac
+
+  cmd="${cmd},FF,"
+
+  case "$speed" in
+  fast)
+    cmd="${cmd}0060"
+    ;;
+  slow)
+    cmd="${cmd}01F4"
+    ;;
+  0)
+    cmd="${cmd}FFFF"
+    ;;
+  *)
+    echo "ERROR: unsupport speed: $speed"
+    return 1
+    ;;
+  esac
+
+  ubus call "$ubus_path" send "{\"data\": \"$cmd\"}"
+}
+
+[ -z "$color" -o "$1" = "-h" ] && {
+	usage
+	exit
+}
+
+[ -n "$color" ] || color=off
+[ "$color" = off ] && style=solid
+[ -n "$style" ] || style=solid
+[ "$style" != blinking ] && speed=0
+[ "$style" = blinking -a -z "$speed" ] && speed=slow
+
+drain
+_ledctl off
+sleep 0.5
+_ledctl "$color" "$speed" || exit 2

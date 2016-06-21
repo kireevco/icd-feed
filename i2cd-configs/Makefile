@@ -22,6 +22,7 @@ define Package/i2cd-configs/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/sbin
+	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/usr/share/rt2860v2
 
 	$(CP) -Pr ./files/* $(1)
