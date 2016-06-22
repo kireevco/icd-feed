@@ -2,8 +2,6 @@
 
 [ -x /etc/init.d/apcliled ] && /etc/init.d/apcliled stop
 
-wifi down
-
 for c in j i h g f e d c b a; do
   [ -x /etc/init.d/custom-${c} ] && /etc/init.d/custom-${c} stop
 done
@@ -34,5 +32,8 @@ if mountpoint -q /tmp/vol/1 && mountpoint -q /tmp/vol/2; then
     done
   fi
 fi
+
+mount_root
+firstboot -y
 
 led off
