@@ -1,0 +1,27 @@
+#!/bin/sh
+
+. /usr/share/libubox/jshn.sh
+
+ubus_path="wireless.sta"
+
+if ! iwconfig $(uci get wireless.sta.ifname) | grep -Fq 'Not-Associated'; then
+  logger "$(uci get wireless.sta.ifname)" is connected
+  led green
+else
+  logger "$(uci get wireless.sta.ifname)" is disconnected
+  led yellow
+fi
+
+ubus listen wireless.sta | while read -r line; do
+  json_load "$line"
+  json_select "$ubus_path"
+  json_get_var connectivity connectivity
+  if [ "$connectivity" = "connected" ]; then
+    logger "$(uci get wireless.sta.ifname)" is connected
+    led green
+  elif [ "$connectivity" = "disconnected" ]; then
+    logger "$(uci get wireless.sta.ifname)" is disconnected
+    led yellow
+  fi
+  json_select ..
+done
