@@ -8,7 +8,7 @@ ubus_path="serial.ttyS0"
 
 usage() {
   cat << EOF
-led <color> [<style> [<speed>]]
+usage: led <color> [<style> [<speed>]]
 
 color:
   red, yellow, green, cyan, blue, magenta, off
