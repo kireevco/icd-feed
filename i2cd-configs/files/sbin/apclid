@@ -20,6 +20,7 @@ while true; do
 	fi
 
 	# Begin to connect to the AP
+	ubus send wireless.sta '{"connectivity": "disconnected"}'
 
 	ifconfig $iface down
 
@@ -79,6 +80,7 @@ while true; do
 	# Wait for station to connect to the AP
 	for i in $(seq $MAX_INTERVAL); do
 		if ! iwconfig apcli0 | grep -q 'Not-Associated'; then
+			ubus send wireless.sta '{"connectivity": "connected"}'
 			break
 		fi
 		sleep 1

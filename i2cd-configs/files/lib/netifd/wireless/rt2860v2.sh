@@ -173,6 +173,8 @@ sta_teardown() {
 		kill -9 "$line"
 	done
 
+	ubus send wireless.sta '{"connectivity": "disconnected"}'
+
 	iwpriv $(uci get wireless.sta.ifname) set ApCliEnable=0
 }
 
