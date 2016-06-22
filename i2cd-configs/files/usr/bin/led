@@ -71,7 +71,7 @@ _ledctl() {
     cmd="${cmd}01F4"
     ;;
   0)
-    cmd="${cmd}FFFF"
+    cmd="${cmd}0000"
     ;;
   *)
     echo "ERROR: unsupport speed: $speed"
