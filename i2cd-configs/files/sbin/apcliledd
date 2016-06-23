@@ -1,16 +1,13 @@
 #!/bin/sh
 
+pid=$$
+
 . /usr/share/libubox/jshn.sh
 
 ubus_path="wireless.sta"
-pid_file="/tmp/apcliledd.pid"
 
 terminate() {
-  [ -f "$pid_file" ] || return
-  cat "$pid_file" | while read -r pid; do
-    kill "$pid"
-  done
-  rm "$pid_file"
+  pkill -9 -P "$pid"
 }
 
 if ! iwconfig $(uci get wireless.sta.ifname) | grep -Fq 'Not-Associated'; then
@@ -23,7 +20,7 @@ fi
 
 trap terminate SIGTERM
 
-(ubus listen wireless.sta & echo "$!" >> "$pid_file") | while read -r line; do
+ubus listen wireless.sta | while read -r line; do
   json_load "$line"
   json_select "$ubus_path"
   json_get_var connectivity connectivity
@@ -35,4 +32,6 @@ trap terminate SIGTERM
     led yellow
   fi
   json_select ..
-done
+done &
+
+wait
