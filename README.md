@@ -26,7 +26,7 @@ In the Ubuntu system, open the *Terminal* application and type the following com
 2. Download OpenWrt source codes:
 
     ```
-    git clone git@github.com:Rosonix/openwrt.git
+    git clone git@github.com:FloTechnologies/icd-openwrt.git
     ```
 
 3. Prepare the default configuration file for feeds:
@@ -39,7 +39,7 @@ In the Ubuntu system, open the *Terminal* application and type the following com
 4. Add the I2CD feed:
 
     ```
-    echo src-git i2cd git@github.com:Rosonix/I2CD-feed.git >> feeds.conf
+    echo src-git i2cd git@github.com:FloTechnologies/I2CD-feed.git >> feeds.conf
     ```
 
 5. Update the feed information of all available packages for building the firmware:
