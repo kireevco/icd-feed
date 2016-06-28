@@ -24,7 +24,7 @@ elif [ "$enabled" = "0" ]; then
 fi
 
 [ -n "$ssid" ] && uci set wireless.ap.ssid="$ssid"
-[ -n "$key" ] && uci set wireless.ap.key=$(get_encrypted_ap_key "$key")
+[ -n "$key" ] && uci set wireless.ap.key="$(get_encrypted_ap_key "$key")"
 [ -n "$encryption" ] && uci set wireless.ap.encryption="$encryption"
 
 uci commit

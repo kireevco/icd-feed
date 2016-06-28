@@ -22,6 +22,6 @@ elif [ "$enabled" = "0" ]; then
 fi
 
 [ -n "$ssid" ] && uci set wireless.sta.ssid="$ssid"
-[ -n "$key" ] && uci set wireless.sta.key=$(get_encrypted_sta_key "$key")
+[ -n "$key" ] && uci set wireless.sta.key="$(get_encrypted_sta_key "$key")"
 
 uci commit
