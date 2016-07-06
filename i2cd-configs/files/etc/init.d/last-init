@@ -15,58 +15,15 @@ boot() {
 		mount -t ext4 -o data=journal,sync /dev/mmcblk0p2 /tmp/vol/2
 	}
 
-	# Install Python symlinks
-	[ -e /tmp/vol/2/usr/bin/easy_install -a ! -s /usr/bin/easy_install ] && \
-		ln -s /tmp/vol/2/usr/bin/easy_install /usr/bin
-	[ -e /tmp/vol/2/usr/bin/easy_install-2.7 -a ! -s /usr/bin/easy_install-2.7 ] && \
-		ln -s /tmp/vol/2/usr/bin/easy_install-2.7 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/pip -a ! -s /usr/bin/pip ] && \
-		ln -s /tmp/vol/2/usr/bin/pip /usr/bin
-	[ -e /tmp/vol/2/usr/bin/pip2 -a ! -s /usr/bin/pip2 ] && \
-		ln -s /tmp/vol/2/usr/bin/pip2 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/pip2.7 -a ! -s /usr/bin/pip2.7 ] && \
-		ln -s /tmp/vol/2/usr/bin/pip2.7 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/python -a ! -s /usr/bin/python ] && \
-		ln -s /tmp/vol/2/usr/bin/python /usr/bin
-	[ -e /tmp/vol/2/usr/bin/python2 -a ! -s /usr/bin/python2 ] && \
-		ln -s /tmp/vol/2/usr/bin/python2 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/python2.7 -a ! -s /usr/bin/python2.7 ] && \
-		ln -s /tmp/vol/2/usr/bin/python2.7 /usr/bin
-	[ -e /tmp/vol/2/usr/lib/libpython2.7.so -a ! -s /usr/lib/libpython2.7.so ] && \
-		ln -s /tmp/vol/2/usr/lib/libpython2.7.so /usr/lib
-	[ -e /tmp/vol/2/usr/lib/libpython2.7.so.1.0 -a ! -s /usr/lib/libpython2.7.so.1.0 ] && \
-		ln -s /tmp/vol/2/usr/lib/libpython2.7.so.1.0 /usr/lib
-	[ -e /tmp/vol/2/usr/lib/python2.7 -a ! -s /usr/lib/python2.7 ] && \
-		ln -s /tmp/vol/2/usr/lib/python2.7 /usr/lib
-	[ -e /tmp/vol/2/usr/bin/easy_install-3.5 -a ! -s /usr/bin/easy_install-3.5 ] && \
-		ln -s /tmp/vol/2/usr/bin/easy_install-3.5 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/easy_install-3.5 -a ! -s /usr/bin/easy_install-3.5 ] && \
-		ln -s /tmp/vol/2/usr/bin/easy_install-3.5 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/easy_install3 -a ! -s /usr/bin/easy_install3 ] && \
-		ln -s /tmp/vol/2/usr/bin/easy_install3 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/pip3 -a ! -s /usr/bin/pip3 ] && \
-		ln -s /tmp/vol/2/usr/bin/pip3 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/pip3.5 -a ! -s /usr/bin/pip3.5 ] && \
-		ln -s /tmp/vol/2/usr/bin/pip3.5 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/python3 -a ! -s /usr/bin/python3 ] && \
-		ln -s /tmp/vol/2/usr/bin/python3 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/python3-config -a ! -s /usr/bin/python3-config ] && \
-		ln -s /tmp/vol/2/usr/bin/python3-config /usr/bin
-	[ -e /tmp/vol/2/usr/bin/python3.5 -a ! -s /usr/bin/python3.5 ] && \
-		ln -s /tmp/vol/2/usr/bin/python3.5 /usr/bin
-	[ -e /tmp/vol/2/usr/bin/python3.5-config -a ! -s /usr/bin/python3.5-config ] && \
-		ln -s /tmp/vol/2/usr/bin/python3.5-config /usr/bin
-	[ ! -d /usr/include ] && mkdir /usr/include
-	[ -e /tmp/vol/2/usr/include/python3.5 -a ! -s /usr/include/python3.5 ] && \
-		ln -s /tmp/vol/2/usr/include/python3.5 /usr/include
-	[ -e /tmp/vol/2/usr/lib/libpython3.5.a -a ! -s /usr/lib/libpython3.5.a ] && \
-		ln -s /tmp/vol/2/usr/lib/libpython3.5.a /usr/lib
-	[ -e /tmp/vol/2/usr/lib/libpython3.5.so -a ! -s /usr/lib/libpython3.5.so ] && \
-		ln -s /tmp/vol/2/usr/lib/libpython3.5.so /usr/lib
-	[ -e /tmp/vol/2/usr/lib/libpython3.5.so.1.0 -a ! -s /usr/lib/libpython3.5.so.1.0 ] && \
-		ln -s /tmp/vol/2/usr/lib/libpython3.5.so.1.0 /usr/lib
-	[ -e /tmp/vol/2/usr/lib/pkgconfig -a ! -s /usr/lib/pkgconfig ] && \
-		ln -s /tmp/vol/2/usr/lib/pkgconfig /usr/lib
-	[ -e /tmp/vol/2/usr/lib/python3.5 -a ! -s /usr/lib/python3.5 ] && \
-		ln -s /tmp/vol/2/usr/lib/python3.5 /usr/lib
+	# Install symlinks
+	[ -d /usr ] || mkdir /usr
+	for d in /tmp/vol/2/usr/*; do
+		[ -d "$d" ] || continue
+		base_d=$(basename "$d")
+		[ -d "/usr/$base_d" ] || mkdir "/usr/$base_d"
+		for f in "${d}/"*; do
+			base_f=$(basename "$f")
+			[ -e "/usr/${base_d}/${base_f}" ] || ln -s "$f" "/usr/${base_d}/${base_f}"
+		done
+	done
 }
