@@ -10,14 +10,7 @@ ext_click_folder="/tmp/vol/2/lib/rc.button/${BUTTON}/on-click.d"
 ext_long_click_folder="/tmp/vol/2/lib/rc.button/${BUTTON}/on-long-click.d"
 
 if [ $SEEN -ge 10 ]; then
-  ubus send button "{\"$BUTTON\": \"longClick\"}" &
-  if [ -d "$ext_long_click_folder" \
-      -a -n "$(ls -A "$ext_long_click_folder" 2>/dev/null || true)" ]; then
-    for f in "${ext_long_click_folder}/"*; do
-      [ -x "$f" ] && "$f"
-    done &
-    sleep 10
-  fi
+  ubus send key "{\"name\": \"$BUTTON\", \"action\": \"longClick\"}" &
   if [ -d "$long_click_folder" \
       -a -n "$(ls -A "$long_click_folder" 2>/dev/null || true)" ]; then
     for f in "${long_click_folder}/"*; do
@@ -25,14 +18,7 @@ if [ $SEEN -ge 10 ]; then
     done
   fi
 else
-  ubus send button "{\"$BUTTON\": \"click\"}" &
-  if [ -d "$ext_click_folder" \
-      -a -n "$(ls -A "$ext_click_folder" 2>/dev/null || true)" ]; then
-    for f in "${ext_click_folder}/"*; do
-      [ -x "$f" ] && "$f"
-    done &
-    sleep 10
-  fi
+  ubus send key "{\"name\": \"$BUTTON\", \"action\": \"click\"}" &
   if [ -d "$click_folder" \
       -a -n "$(ls -A "$click_folder" 2>/dev/null || true)" ]; then
     for f in "${click_folder}/"*; do

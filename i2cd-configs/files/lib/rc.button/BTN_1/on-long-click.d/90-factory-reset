@@ -1,3 +1,5 @@
 #!/bin/sh
 
+led cyan blinking
+
 factory-reset -y
