@@ -11,7 +11,7 @@ simplified_ap_list() {
 }
 
 aplist=$(site_survey $(uci get wireless.sta.ifname))
-aplist=$(simplified_ap_list "$aplist" | sort | uniq -w 55)
+aplist=$(simplified_ap_list "$aplist" | sort -f | uniq -w 55)
 
 json_init
 json_add_array "result"
