@@ -1,0 +1,25 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2016 Rosonix Technology, Inc.
+
+START=10
+
+boot() {
+	ethaddr=$(fw_printenv ethaddr | sed 's/ethaddr=//;s/\"//g')
+
+	[ -z "$ethaddr" ] && return
+
+	n=$(echo 0x$ethaddr | sed 's/://g')
+
+	# For module, the MAC for Wi-Fi (ra0) should be "n % 2 = 0"
+	while [ "$(( n % 2 ))" != "0" ]; do
+	  n=$(( n + 1 ))
+	done
+
+	apaddr=$(printf "%012X" $n | sed 's/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1:\2:\3:\4:\5:\6/' | tr [:upper:] [:lower:])
+	hostname="i2cd-$(echo -n $apaddr | sed 's/://g' | tail -c 6)"
+
+	if [ "$(uci get system.@system[0].hostname)" != "$hostname" ]; then
+		uci set system.@system[0].hostname="$hostname"
+		uci commit
+	fi
+}
