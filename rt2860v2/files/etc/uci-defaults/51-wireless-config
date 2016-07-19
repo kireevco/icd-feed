@@ -1,27 +1,25 @@
-cat > /etc/config/wireless << EOF
+[ -f "/etc/config/wireless" ] || touch "/etc/config/wireless"
 
-config wifi-device 'radio0'
-	option type 'rt2860v2'
-	option variant 'RT2860'
-	option country 'US'
-	option hwmode '11g'
-	option htmode 'HT40'
-	option channel 'auto'
+[ -n "$(uci get wireless.radio0)" ]         || uci set wireless.radio0='wifi-device'
+[ -n "$(uci get wireless.radio0.type)" ]    || uci set wireless.radio0.type='rt2860v2'
+[ -n "$(uci get wireless.radio0.variant)" ] || uci set wireless.radio0.variant='RT2860'
+[ -n "$(uci get wireless.radio0.country)" ] || uci set wireless.radio0.country='US'
+[ -n "$(uci get wireless.radio0.hwmode)" ]  || uci set wireless.radio0.hwmode='11g'
+[ -n "$(uci get wireless.radio0.htmode)" ]  || uci set wireless.radio0.htmode='HT40'
+[ -n "$(uci get wireless.radio0.channel)" ] || uci set wireless.radio0.channel='auto'
+[ -n "$(uci get wireless.ap)" ]             || uci set wireless.ap='wifi-iface'
+[ -n "$(uci get wireless.ap.device)" ]      || uci set wireless.ap.device='radio0'
+[ -n "$(uci get wireless.ap.mode)" ]        || uci set wireless.ap.mode='ap'
+[ -n "$(uci get wireless.ap.network)" ]     || uci set wireless.ap.network='lan'
+[ -n "$(uci get wireless.ap.ifname)" ]      || uci set wireless.ap.ifname='ra0'
+[ -n "$(uci get wireless.ap.ssid)" ]        || uci set wireless.ap.ssid='OpenWrt'
+[ -n "$(uci get wireless.ap.encryption)" ]  || uci set wireless.ap.encryption='none'
+[ -n "$(uci get wireless.sta)" ]            || uci set wireless.sta='wifi-iface'
+[ -n "$(uci get wireless.sta.device)" ]     || uci set wireless.sta.device='radio0'
+[ -n "$(uci get wireless.sta.mode)" ]       || uci set wireless.sta.mode='sta'
+[ -n "$(uci get wireless.sta.network)" ]    || uci set wireless.sta.network='wan'
+[ -n "$(uci get wireless.sta.ifname)" ]     || uci set wireless.sta.ifname='apcli0'
+[ -n "$(uci get wireless.sta.disabled)" ]   || uci set wireless.sta.disabled='1'
 
-config wifi-iface 'ap'
-	option device 'radio0'
-	option mode 'ap'
-	option network 'lan'
-	option ifname 'ra0'
-	option ssid 'OpenWrt'
-	option encryption 'none'
-
-config wifi-iface 'sta'
-	option device 'radio0'
-	option mode 'sta'
-	option network 'wan'
-	option ifname 'apcli0'
-	option disabled '1'
-EOF
-
+uci commit
 exit 0
