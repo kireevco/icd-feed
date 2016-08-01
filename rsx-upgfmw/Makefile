@@ -6,7 +6,7 @@ PKG_RELEASE=$(PKG_SOURCE_VERSION)
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git@github.com:FloTechnologies/icd-upgfmw.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_VERSION:=345678f2a38b865162c7b59cb3eed814b526c8c9
+PKG_SOURCE_VERSION:=f60a3463595f505c9e2fde93c86982316a830363
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
 PKG_LICENSE:=GPL-3.0
 
@@ -18,7 +18,7 @@ include $(INCLUDE_DIR)/cmake.mk
 define Package/rsx-upgfmw
 	SECTION:=utils
 	CATEGORY:=Utilities
-	DEPENDS:=+picocom
+	DEPENDS:=+rsx-upgfmw-picocom
 	TITLE:=Rosonix ZigBee Module RX-357x Firmware Upgrader
 	DEFAULT:=y
 endef
