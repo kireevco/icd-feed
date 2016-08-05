@@ -39,7 +39,7 @@ In the Ubuntu system, open the *Terminal* application and type the following com
 4. Add the I2CD feed:
 
     ```
-    echo src-git i2cd git@github.com:FloTechnologies/I2CD-feed.git >> feeds.conf
+    echo src-git i2cd git@github.com:FloTechnologies/icd-feed.git >> feeds.conf
     ```
 
 5. Update the feed information of all available packages for building the firmware:
