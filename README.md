@@ -23,23 +23,23 @@ In the Ubuntu system, open the *Terminal* application and type the following com
     sudo apt-get install git g++ make libncurses5-dev subversion libssl-dev gawk libxml-parser-perl unzip wget python xz-utils
     ```
 
-2. Download OpenWrt source codes:
+2. Download LEDE source codes:
 
     ```
-    git clone git@github.com:FloTechnologies/icd-openwrt.git
+    git clone git@github.com:FloTechnologies/icd-lede.git
     ```
 
 3. Prepare the default configuration file for feeds:
 
     ```
-    cd /path/to/openwrt
+    cd /path/to/lede
     cp feeds.conf.default feeds.conf
     ```
 
 4. Add the I2CD feed:
 
     ```
-    echo src-git i2cd git@github.com:FloTechnologies/I2CD-feed.git >> feeds.conf
+    echo src-git i2cd git@github.com:FloTechnologies/icd-feed.git >> feeds.conf
     ```
 
 5. Update the feed information of all available packages for building the firmware:
@@ -54,32 +54,19 @@ In the Ubuntu system, open the *Terminal* application and type the following com
     ./scripts/feeds install -a
     ```
 
-7. Prepare the kernel configuration to inform OpenWrt that we want to build an firmware for I2CD:
+7. Prepare the kernel configuration to inform LEDE that we want to build a firmware for I2CD:
 
     ```
-    cp feeds/i2cd/config/i2cd_defconfig .config
+    cp feeds/i2cd/i2cd_config .config
     ```
 
-8. Prepare the device tree source file for the I2CD hardware:
-
-    ```
-    cp feeds/i2cd/dts/I2CD.dts target/linux/ramips/dts
-    ```
-
-9. Import the key (optional)
-
-    ```
-    git archive --remote=ssh://git@bitbucket.org/rosonix/openwrt-build-key.git master key-build | tar -x
-    git archive --remote=ssh://git@bitbucket.org/rosonix/openwrt-build-key.git master key-build.pub | tar -x
-    ```
-
-10. Start the compilation process:
+8. Start the compilation process:
 
     ```
     make V=99
     ```
 
-11. After the build process completes, the resulted firmware file will be at `bin/ramips/openwrt-ramips-mt7620-i2cd-squashfs-sysupgrade.bin`. Depending on the H/W resources of the host environment, the build process may **take more than 2 hours**.
+9. After the build process completes, the resulted firmware file will be at `bin/targets/ramips/mt7620/lede-<version>-ramips-mt7620-i2cd-squashfs-sysupgrade.bin`. Depending on the H/W resources of the host environment, the build process may **take more than 2 hours**.
 
 
 ## License
