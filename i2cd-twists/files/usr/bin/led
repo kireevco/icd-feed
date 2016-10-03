@@ -11,12 +11,12 @@ usage() {
 usage: led <color> [<style> [<speed>]]
 
 color:
-  red, yellow, green, cyan, blue, magenta, off
+  white, red, yellow, green, cyan, blue, magenta, off
   default: off
 style:
   solid, blinking
   default: solid
-speed (especially for blinking):
+speed (for blinking):
   fast, slow
   default: slow
 EOF
@@ -34,6 +34,9 @@ _ledctl() {
   local cmd='$00,00,FFFFFFFFFFFFFFFF,C001,0C00,FF,FF,FFFF,E3,'
 
   case "$color" in
+  white)
+    cmd="${cmd}17"
+    ;;
   red)
     cmd="${cmd}11"
     ;;
