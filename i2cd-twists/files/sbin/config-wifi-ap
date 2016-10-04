@@ -1,13 +1,28 @@
 #!/bin/sh
 
+cmd=$(basename "$0")
 enabled="$1"
 ssid="$2"
 encryption="$3"
-key="$4"
+passwd="$4"
+
+dialect=
+
+case "$cmd" in
+  config-wifi-ap)
+    dialect=ap
+    ;;
+  config-wifi-sta)
+    dialect=sta
+    ;;
+  *)
+    dialect=
+    ;;
+esac
 
 [ "$enabled" = "1" -o "$enabled" = "0" ] || {
 	cat << EOF
-usage: config-wifi-ap <enabled> [<ssid> <encryption> <password>]
+usage: config-wifi-$dialect <enabled> [<ssid> <encryption> <password>]
 
 enabled: 1, 0
 encryption: psk, psk+aes, psk+tkip, psk+tkip+aes, psk2, psk2+aes, psk2+tkip, psk2+tkip+aes
@@ -15,16 +30,16 @@ EOF
 	exit 2
 }
 
-. /usr/share/rt2860v2/encrypt.sh
+. /lib/functions/wireless.sh
 
 if [ "$enabled" = "1" ]; then
-	uci set wireless.ap.disabled="0"
+	uci set wireless.$dialect.disabled="0"
 elif [ "$enabled" = "0" ]; then
-	uci set wireless.ap.disabled="1"
+	uci set wireless.$dialect.disabled="1"
 fi
 
-[ -n "$ssid" ] && uci set wireless.ap.ssid="$ssid"
-[ -n "$key" ] && uci set wireless.ap.key="$(get_encrypted_ap_key "$key")"
-[ -n "$encryption" ] && uci set wireless.ap.encryption="$encryption"
+[ -n "$ssid" ] && uci set wireless.$dialect.ssid="$ssid"
+[ -n "$passwd" ] && uci set wireless.$dialect.key="$(wireless_encrypt_passwd "$passwd")"
+[ -n "$encryption" ] && uci set wireless.$dialect.encryption="$encryption"
 
 uci commit

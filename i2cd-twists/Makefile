@@ -9,7 +9,7 @@ define Package/i2cd-twists
 	SECTION:=base
 	CATEGORY:=Base system
 	TITLE:=I2CD specific configurations
-	DEPENDS:=@TARGET_ramips +kmod-rt2800-soc +rsx-upgfmw +seriald
+	DEPENDS:=@TARGET_ramips +kmod-rt2800-soc +netifd +openssl-util +rsx-upgfmw +seriald
 	DEFAULT:=y
 endef
 
@@ -21,16 +21,17 @@ define Package/i2cd-twists/install
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/button
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_DIR) $(1)/lib/functions
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_DIR) $(1)/usr/bin
 
-	$(CP) -Pr ./files/* $(1)
+	$(CP) -a ./files/* $(1)
 endef
 
 define Build/Compile
 endef
 
 $(shell rm -rf /tmp/vol)
-$(shell cp -r ./host/tmp/* /tmp)
+$(shell cp -a ./host/tmp/* /tmp)
 
 $(eval $(call BuildPackage,i2cd-twists))
