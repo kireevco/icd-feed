@@ -1,28 +1,49 @@
 #!/bin/sh
 
-[ "${ACTION}" = "released" -o "${ACTION}" = "timeout" ] || exit 21
+logger "$BUTTON $ACTION for $SEEN second(s)"
 
-logger "$BUTTON pressed for $SEEN seconds"
+CLICK_FOLDER="/lib/rc.button/${BUTTON}/on-click.d"
+SHORT_CLICK_FOLDER="/lib/rc.button/${BUTTON}/on-short-click.d"
+LONG_CLICK_FOLDER="/lib/rc.button/${BUTTON}/on-long-click.d"
 
-click_folder="/lib/rc.button/${BUTTON}/on-click.d"
-long_click_folder="/lib/rc.button/${BUTTON}/on-long-click.d"
-ext_click_folder="/tmp/vol/2/lib/rc.button/${BUTTON}/on-click.d"
-ext_long_click_folder="/tmp/vol/2/lib/rc.button/${BUTTON}/on-long-click.d"
+SHORT_CLICK_INTERVAL=5
+LONG_CLICK_INTERVAL=20
 
-if [ $SEEN -ge 10 ]; then
-  ubus send key "{\"name\": \"$BUTTON\", \"action\": \"longClick\"}" &
-  if [ -d "$long_click_folder" \
-      -a -n "$(ls -A "$long_click_folder" 2>/dev/null || true)" ]; then
-    for f in "${long_click_folder}/"*; do
-      [ -x "$f" ] && "$f"
-    done
-  fi
-else
-  ubus send key "{\"name\": \"$BUTTON\", \"action\": \"click\"}" &
-  if [ -d "$click_folder" \
-      -a -n "$(ls -A "$click_folder" 2>/dev/null || true)" ]; then
-    for f in "${click_folder}/"*; do
-      [ -x "$f" ] && "$f"
-    done
-  fi
+ASYNC_SHORT_CLICK_LED="_async_short_click_led"
+ASYNC_LONG_CLICK_LED="_async_long_click_led"
+
+if [ "${ACTION}" = "released" -o "${ACTION}" = "timeout" ]; then
+	if [ $SEEN -ge $LONG_CLICK_INTERVAL ]; then
+		ubus send key "{\"name\": \"$BUTTON\", \"action\": \"longClick\"}" &
+		if [ -d "$LONG_CLICK_FOLDER" \
+				-a -n "$(ls -A "$LONG_CLICK_FOLDER" 2>/dev/null || true)" ]; then
+			for f in "${LONG_CLICK_FOLDER}/"*; do
+				[ -x "$f" ] && "$f"
+			done
+		fi
+	elif [ $SEEN -ge $SHORT_CLICK_INTERVAL ]; then
+		killall $ASYNC_LONG_CLICK_LED
+		ubus send key "{\"name\": \"$BUTTON\", \"action\": \"shortClick\"}" &
+		if [ -d "$SHORT_CLICK_FOLDER" \
+				-a -n "$(ls -A "$SHORT_CLICK_FOLDER" 2>/dev/null || true)" ]; then
+			for f in "${SHORT_CLICK_FOLDER}/"*; do
+				[ -x "$f" ] && "$f"
+			done
+		fi
+	else
+		killall $ASYNC_SHORT_CLICK_LED
+		killall $ASYNC_LONG_CLICK_LED
+		ubus send key "{\"name\": \"$BUTTON\", \"action\": \"click\"}" &
+		if [ -d "$CLICK_FOLDER" \
+				-a -n "$(ls -A "$CLICK_FOLDER" 2>/dev/null || true)" ]; then
+			for f in "${CLICK_FOLDER}/"*; do
+				[ -x "$f" ] && "$f"
+			done
+		fi
+	fi
+	/etc/init.d/wifiled start
+elif [ "${ACTION}" = "pressed" ]; then
+	/etc/init.d/wifiled stop
+	$ASYNC_SHORT_CLICK_LED $SHORT_CLICK_INTERVAL white blinking &
+	$ASYNC_LONG_CLICK_LED $LONG_CLICK_INTERVAL cyan blinking &
 fi

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cmd=$(basename "$0")
+delayed="$1"
+
+[ -n "$delayed" ] || exit 1
+
+sleep "$delayed"
+shift
+(led $@ &)
