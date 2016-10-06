@@ -1,3 +1,5 @@
+ethaddr=$(fw_printenv ethaddr | sed 's/^.*=//g;s/\"//g;s/://g' | tr '[:upper:]' '[:lower:]')
+
 cat > /etc/config/network << EOF
 
 config interface 'loopback'
@@ -8,18 +10,12 @@ config interface 'loopback'
 
 config interface 'lan'
 	option type 'bridge'
-	option ifname 'eth0 ra0'
+	option ifname 'eth0.1'
 	option proto 'static'
 	option ipaddr '192.168.3.1'
 	option netmask '255.255.255.0'
 
-config interface 'lan0'
-	option proto 'none'
-	option ifname 'eth0'
-	option auto '1'
-
 config interface 'wan'
-	option ifname 'apcli0'
 	option proto 'dhcp'
 EOF
 

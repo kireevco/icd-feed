@@ -1,29 +1,28 @@
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=i2cd-configs
+PKG_NAME:=i2cd-twists
 PKG_VERSION:=0.1
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/i2cd-configs
+define Package/i2cd-twists
 	SECTION:=base
 	CATEGORY:=Base system
 	TITLE:=I2CD specific configurations
-	DEPENDS:=+kmod-rt2860v2
+	DEPENDS:=@TARGET_ramips +kmod-rt2800-soc +rsx-upgfmw +seriald
 	DEFAULT:=y
 endef
 
-define KernelPackage/rt2860v2/description
-	The configuration tweaks for the I2CD
+define Package/i2cd-twists/description
+	The configurations for the I2CD
 endef
 
-define Package/i2cd-configs/install
+define Package/i2cd-twists/install
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/button
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_DIR) $(1)/usr/share/rt2860v2
 
 	$(CP) -Pr ./files/* $(1)
 endef
@@ -34,4 +33,4 @@ endef
 $(shell rm -rf /tmp/vol)
 $(shell cp -r ./host/tmp/* /tmp)
 
-$(eval $(call BuildPackage,i2cd-configs))
+$(eval $(call BuildPackage,i2cd-twists))
