@@ -1,0 +1,12 @@
+section=$(uci add firewall rule)
+
+uci batch << EOF
+set firewall.${section}.name='Allow-WAN-SSH'
+set firewall.${section}.src='wan'
+set firewall.${section}.dest_port='22'
+set firewall.${section}.proto='tcp'
+set firewall.${section}.target='ACCEPT'
+commit firewall
+EOF
+
+exit 0
