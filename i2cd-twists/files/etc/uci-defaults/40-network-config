@@ -17,6 +17,7 @@ config interface 'lan'
 
 config interface 'wan'
 	option proto 'dhcp'
+	option hostname 'flo-${ethaddr:8}'
 EOF
 
 exit 0

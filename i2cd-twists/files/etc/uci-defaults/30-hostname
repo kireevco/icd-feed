@@ -1,0 +1,8 @@
+ethaddr=$(fw_printenv ethaddr | sed 's/^.*=//g;s/\"//g;s/://g' | tr '[:upper:]' '[:lower:]')
+
+uci batch << EOF
+set system.@system[0].hostname='flo-${ethaddr:8}'
+commit system
+EOF
+
+exit 0
