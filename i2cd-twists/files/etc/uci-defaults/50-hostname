@@ -1,0 +1,11 @@
+waddr=$(uci get wireless.ap.macaddr)
+hostname="flo-$(echo $waddr | sed 's/://g' | cut -b 9-)"
+
+uci batch << EOF
+set system.@system[0].hostname='$hostname'
+set network.wan.hostname='$hostname'
+commit system
+commit network
+EOF
+
+exit 0

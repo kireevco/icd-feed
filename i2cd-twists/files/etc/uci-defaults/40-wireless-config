@@ -1,5 +1,17 @@
 ethaddr=$(fw_printenv ethaddr | sed 's/^.*=//g;s/\"//g;s/://g' | tr '[:lower:]' '[:upper:]')
 
+[ -z "$ethaddr" ] && return
+
+n=$(echo 0x$ethaddr)
+
+# Let waddr always be even number
+while [ "$(( n % 2 ))" != "0" ]; do
+	n=$(( n + 1 ))
+done
+
+waddr=$(printf "%012X" $n | sed 's/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1:\2:\3:\4:\5:\6/' | tr [:upper:] [:lower:])
+ssid="FLO-$(echo $waddr | sed 's/://g' | cut -b 9-)"
+
 cat > /etc/config/wireless << EOF
 
 config wifi-device 'radio0'
@@ -11,14 +23,16 @@ config wifi-device 'radio0'
 
 config wifi-iface 'ap'
 	option device 'radio0'
+	option macaddr '$waddr'
 	option ifname 'wlan0'
 	option mode 'ap'
 	option network 'lan'
-	option ssid 'FLO-${ethaddr:8}'
+	option ssid '$ssid'
 	option disabled '1'
 
 config wifi-iface 'sta'
 	option device 'radio0'
+	option macaddr '$waddr'
 	option ifname 'wwan0'
 	option mode 'sta'
 	option network 'wan'

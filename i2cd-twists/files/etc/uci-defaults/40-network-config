@@ -1,5 +1,3 @@
-ethaddr=$(fw_printenv ethaddr | sed 's/^.*=//g;s/\"//g;s/://g' | tr '[:upper:]' '[:lower:]')
-
 cat > /etc/config/network << EOF
 
 config interface 'loopback'
@@ -17,7 +15,6 @@ config interface 'lan'
 
 config interface 'wan'
 	option proto 'dhcp'
-	option hostname 'flo-${ethaddr:8}'
 EOF
 
 exit 0
