@@ -2,7 +2,7 @@ ethaddr=$(fw_printenv ethaddr | sed 's/^.*=//g;s/\"//g' | tr '[:upper:]' '[:lowe
 factory_ethaddr=$(hexdump -v -n 6 -s 4 -e '5/1 "%02x:" 1/1 "%02x"' /dev/mtdblock2 2>/dev/null | tr '[:upper:]' '[:lower:]')
 
 if [ "$ethaddr" != "$factory_ethaddr" ]; then
-	hexaddr=$(echo "8c:c7:aa:02:80:97" | tr ':' '\n' | while read -r line; do echo -n "\x$line"; done)
+	hexaddr=$(echo "$ethaddr" | tr ':' '\n' | while read -r line; do echo -n "\x$line"; done)
 	printf "$hexaddr" | dd of=/dev/mtdblock2 bs=1 seek=4 count=6 conv=notrunc
 fi
 
