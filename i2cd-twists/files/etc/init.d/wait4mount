@@ -1,0 +1,61 @@
+#!/bin/sh /etc/rc.common
+
+START=41
+TIMEOUT=60
+
+boot()
+{
+	idx=0
+	mnt=""
+	res=`uci -q get fstab.@mount[$idx].enabled`
+	while [ $? -eq 0 ];
+	do
+		if [ $res -ne 0 ]
+		then
+			res=`uci -q get fstab.@mount[$idx].wait4mounted`
+			if [ $? -ne 0 ] || [ $res -ne 0 ]
+			then
+				res=`uci -q get fstab.@mount[$idx].target`
+				if [ -z "$mnt" ]
+				then
+					mnt="$res"
+				else
+					mnt="$mnt $res"
+				fi
+			fi
+		fi
+
+		idx=$(($idx+1))
+		res=`uci -q get fstab.@mount[$idx].enabled`
+	done
+
+	notReady="all"
+	timeout=$TIMEOUT
+
+	while [ -n "$notReady" ] && [ $timeout -gt 0 ];
+	do
+		if [ "$notReady" != "all" ]
+		then
+			sleep 5
+			timeout=$(($timeout-5))
+		fi
+
+		notReady=""
+
+		for m in $mnt; do
+			res=`mount | grep -iw $m`
+			if [ -z "$res" ]
+			then
+				notReady="$notReady $m"
+			fi
+		done
+	done
+
+	if [ -n "$notReady" ]
+	then
+		echo "Following mount points were not ready during $TIMEOUT seconds: $notReady"
+		exit 1
+	fi
+
+	exit 0
+}

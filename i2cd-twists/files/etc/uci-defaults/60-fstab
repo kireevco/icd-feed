@@ -1,0 +1,28 @@
+cat > /etc/config/fstab << EOF
+
+config 'global'
+	option anon_swap '0'
+	option anon_mount '0'
+	option auto_swap '0'
+	option auto_mount '1'
+	option delay_root '0'
+	option check_fs '0'
+
+config 'mount'
+	option device '/dev/mmcblk0p1'
+	option target '/tmp/vol/1'
+	option fstype 'ext4'
+	option options 'ro'
+	option wait4mounted '1'
+	option enabled '1'
+
+config 'mount'
+	option device '/dev/mmcblk0p2'
+	option target '/tmp/vol/2'
+	option fstype 'ext4'
+	option enabled_fsck '1'
+	option wait4mounted '1'
+	option enabled '1'
+EOF
+
+exit 0
