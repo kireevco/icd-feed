@@ -1,4 +1,4 @@
-ethaddr=$(fw_printenv ethaddr | sed 's/^.*=//g;s/\"//g;s/://g' | tr '[:lower:]' '[:upper:]')
+ethaddr=$(fw_printenv -n ethaddr | sed 's/://g' | tr '[:lower:]' '[:upper:]')
 
 [ -z "$ethaddr" ] && return
 

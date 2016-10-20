@@ -1,4 +1,4 @@
-ethaddr=$(fw_printenv ethaddr | sed 's/^.*=//g;s/\"//g' | tr '[:upper:]' '[:lower:]')
+ethaddr=$(fw_printenv -n ethaddr | tr '[:upper:]' '[:lower:]')
 factory_ethaddr=$(hexdump -v -n 6 -s 4 -e '5/1 "%02x:" 1/1 "%02x"' /dev/mtdblock2 2>/dev/null | tr '[:upper:]' '[:lower:]')
 
 if [ "$ethaddr" != "$factory_ethaddr" ]; then
