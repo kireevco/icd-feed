@@ -1,11 +1,14 @@
 waddr=$(uci get wireless.ap.macaddr)
 hostname="flo-$(echo $waddr | sed 's/://g' | cut -b 9-)"
+common_hostname="flodevice"
 
+domain_section=$(uci add dhcp domain)
 uci batch << EOF
 set system.@system[0].hostname='$hostname'
 set network.wan.hostname='$hostname'
-commit system
-commit network
+set dhcp.$domain_section.name='$common_hostname'
+set dhcp.$domain_section.ip='192.168.3.1'
+commit
 EOF
 
 exit 0
