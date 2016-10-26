@@ -10,7 +10,7 @@ while [ "$(( n % 2 ))" != "0" ]; do
 done
 
 waddr=$(printf "%012X" $n | sed 's/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1:\2:\3:\4:\5:\6/' | tr [:upper:] [:lower:])
-ssid="FLO-$(echo $waddr | sed 's/://g' | cut -b 9- | tr [:lower:] [:upper:])"
+ssid="Flo-$(echo $waddr | sed 's/://g' | cut -b 9-)"
 
 cat > /etc/config/wireless << EOF
 
