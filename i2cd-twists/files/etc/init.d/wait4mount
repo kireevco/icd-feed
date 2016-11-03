@@ -3,8 +3,7 @@
 START=81
 TIMEOUT=60
 
-boot()
-{
+boot() {
 	idx=0
 	mnt=""
 	res=`uci -q get fstab.@mount[$idx].enabled`
