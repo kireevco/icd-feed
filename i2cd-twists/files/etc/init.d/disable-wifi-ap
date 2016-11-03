@@ -1,0 +1,10 @@
+#!/bin/sh /etc/rc.common
+
+START=18
+
+boot() {
+  if [ "$(uci get wireless.ap.disabled)" != "1" ]; then
+    uci set wireless.ap.disabled=1
+    uci commit wireless
+  fi
+}
