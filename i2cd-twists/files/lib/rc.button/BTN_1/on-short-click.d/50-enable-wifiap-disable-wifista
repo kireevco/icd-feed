@@ -3,8 +3,6 @@
 uci batch << EOF
 set wireless.ap.disabled=0
 set wireless.sta.disabled=1
-commit wireless
 EOF
 
 /etc/init.d/network restart
-sleep 5

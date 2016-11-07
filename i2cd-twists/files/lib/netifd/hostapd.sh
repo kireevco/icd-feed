@@ -172,6 +172,8 @@ hostapd_common_add_bss_config() {
 }
 
 hostapd_set_bss_options() {
+	killall -q async-disable-wifi-ap
+
 	local var="$1"
 	local phy="$2"
 	local vif="$3"
@@ -453,6 +455,7 @@ hostapd_set_bss_options() {
 	}
 
 	append "$var" "$bss_conf" "$N"
+	async-disable-wifi-ap &
 	return 0
 }
 
