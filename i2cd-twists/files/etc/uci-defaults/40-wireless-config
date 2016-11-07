@@ -29,6 +29,7 @@ config wifi-iface 'ap'
 	option network 'lan'
 	option ssid '$ssid'
 	option disabled '1'
+	option duration '1200'
 
 config wifi-iface 'sta'
 	option device 'radio0'
