@@ -6,3 +6,4 @@ set wireless.sta.disabled=1
 EOF
 
 /etc/init.d/network restart
+sleep 5
