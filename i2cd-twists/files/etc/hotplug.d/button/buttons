@@ -6,7 +6,7 @@ CLICK_FOLDER="/lib/rc.button/${BUTTON}/on-click.d"
 SHORT_CLICK_FOLDER="/lib/rc.button/${BUTTON}/on-short-click.d"
 LONG_CLICK_FOLDER="/lib/rc.button/${BUTTON}/on-long-click.d"
 
-SHORT_CLICK_INTERVAL=5
+SHORT_CLICK_INTERVAL=3
 LONG_CLICK_INTERVAL=20
 
 ASYNC_SHORT_CLICK_LED="_async_short_click_led"
