@@ -4,7 +4,10 @@ START=18
 
 boot() {
   if [ "$(uci get wireless.ap.disabled)" != "1" ]; then
-    uci set wireless.ap.disabled=1
-    uci commit wireless
+    if [ -n "$(uci get wireless.sta.ssid)" ]; then
+      config-wifi-sta 1
+    else
+      config-wifi-ap 0
+    fi
   fi
 }
