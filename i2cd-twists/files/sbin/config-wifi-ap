@@ -34,6 +34,22 @@ EOF
 
 if [ "$enabled" = "1" ]; then
 	uci set wireless.$dialect.disabled="0"
+	case "$dialect" in
+		ap)
+			uci batch << EOF
+set network.lan.proto=static
+set wireless.sta.disabled=1
+commit network
+EOF
+			;;
+		sta)
+			uci batch << EOF
+set network.lan.proto=none
+set wireless.ap.disabled=1
+commit network
+EOF
+			;;
+	esac
 elif [ "$enabled" = "0" ]; then
 	uci set wireless.$dialect.disabled="1"
 fi
@@ -42,4 +58,4 @@ fi
 [ -n "$passwd" ] && uci set wireless.$dialect.key="$(wireless_encrypt_passwd "$passwd")"
 [ -n "$encryption" ] && uci set wireless.$dialect.encryption="$encryption"
 
-uci commit
+uci commit wireless

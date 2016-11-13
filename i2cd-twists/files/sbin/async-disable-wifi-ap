@@ -6,7 +6,7 @@ timeout=$(uci get wireless.ap.duration)
 
 sleep "$timeout" && {
   if [ "$(uci get wireless.ap.disabled)" -eq 0 ]; then
-    uci set wireless.ap.disabled=1
+    config-wifi-ap 0
     /etc/init.d/network restart
   fi
 }
