@@ -5,5 +5,5 @@ set wireless.ap.disabled=0
 set wireless.sta.disabled=1
 EOF
 
-wifi
+/etc/init.d/network restart
 sleep 5
