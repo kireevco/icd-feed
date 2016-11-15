@@ -1,7 +1,10 @@
+ethaddr=$(fw_printenv -n ethaddr | tr '[:upper:]' '[:lower:]')
+
 section=$(uci add network interface)
 uci batch << EOF
 set network.lan.proto='none'
 set network.lan.ipaddr='192.168.3.1'
+set network.lan_dev.macaddr='$ethaddr'
 set network.$section.proto='dhcp'
 rename network.$section=wan
 commit network

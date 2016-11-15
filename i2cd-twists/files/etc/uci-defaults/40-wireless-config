@@ -1,16 +1,16 @@
-ethaddr=$(fw_printenv -n ethaddr | sed 's/://g')
+ethaddr=$(fw_printenv -n ethaddr | tr -d ':')
 
 [ -z "$ethaddr" ] && return
 
-n=$(echo 0x$ethaddr)
+n=$(echo -n 0x$ethaddr)
 
 # Let waddr always be even number
 while [ "$(( n % 2 ))" != "0" ]; do
 	n=$(( n + 1 ))
 done
 
-waddr=$(printf "%012X" $n | sed 's/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1:\2:\3:\4:\5:\6/' | tr [:upper:] [:lower:])
-ssid="Flo-$(echo $waddr | sed 's/://g' | cut -b 9-)"
+waddr=$(printf "%012x" "$n" | sed 's/.\{2\}/\:&/g' | cut -c 2-)
+ssid="Flo-$(echo -n $waddr | tr -d ':' | cut -c 9-)"
 
 cat > /etc/config/wireless << EOF
 

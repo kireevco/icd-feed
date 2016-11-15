@@ -1,5 +1,5 @@
 waddr=$(uci get wireless.ap.macaddr)
-hostname="flo-$(echo $waddr | sed 's/://g' | cut -b 9-)"
+hostname="flo-$(echo -n $waddr | tr -d ':' | cut -c 9-)"
 common_hostname="flodevice"
 
 domain_section=$(uci add dhcp domain)

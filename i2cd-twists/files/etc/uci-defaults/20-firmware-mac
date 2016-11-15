@@ -1,9 +1,7 @@
-ethaddr=$(fw_printenv -n ethaddr | tr '[:upper:]' '[:lower:]')
-factory_ethaddr=$(hexdump -v -n 6 -s 4 -e '5/1 "%02x:" 1/1 "%02x"' /dev/mtdblock2 2>/dev/null | tr '[:upper:]' '[:lower:]')
+factory_part=/dev/mtdblock2
+ethaddr=$(fw_printenv -n ethaddr | tr -d ':' | tr '[:upper:]' '[:lower:]')
+addr="$(head -c 6 /dev/urandom | md5sum | head -c 6)""$(echo -n "$ethaddr" | tail -c 5)""0"
 
-if [ "$ethaddr" != "$factory_ethaddr" ]; then
-	hexaddr=$(echo "$ethaddr" | tr ':' '\n' | while read -r line; do echo -n "\x$line"; done)
-	printf "$hexaddr" | dd of=/dev/mtdblock2 bs=1 seek=4 count=6 conv=notrunc
-fi
+printf $(echo -n "$addr" | sed 's/.\{2\}/\\x&/g') | dd of="$factory_part" bs=1 seek=4 count=6 conv=notrunc
 
 exit 0
