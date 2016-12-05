@@ -1,0 +1,27 @@
+#!/bin/sh /etc/rc.common
+
+START=98
+
+env_mqtt_ca_cert="mqtt-ca-cert"
+env_mqtt_cli_cert="mqtt-cli-cert"
+env_mqtt_cli_key="mqtt-cli-key"
+path_mqtt_ca_cert="/tmp/mqtt-ca-cert"
+path_mqtt_cli_cert="/tmp/mqtt-cli-cert"
+path_mqtt_cli_key="/tmp/mqtt-cli-key"
+
+boot() {
+  if fw_printenv -n "$env_mqtt_ca_cert" > /dev/null 2>&1; then
+    fw_printenv -n "$env_mqtt_ca_cert" | base64 -d | gzip -d > \
+      "$path_mqtt_ca_cert"
+  fi
+
+  if fw_printenv -n "$env_mqtt_cli_cert" > /dev/null 2>&1; then
+    fw_printenv -n "$env_mqtt_cli_cert" | base64 -d | gzip -d > \
+      "$path_mqtt_cli_cert"
+  fi
+
+  if fw_printenv -n "$env_mqtt_cli_key" > /dev/null 2>&1; then
+    fw_printenv -n "$env_mqtt_cli_key" | base64 -d | gzip -d > \
+      "$path_mqtt_cli_key"
+  fi
+}
