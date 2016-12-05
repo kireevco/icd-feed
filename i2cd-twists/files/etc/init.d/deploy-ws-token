@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+
+START=98
+
+env_ws_token="ws-token"
+path_ws_token="/tmp/ws-token"
+
+boot() {
+  if fw_printenv -n "$env_ws_token" > /dev/null 2>&1; then
+    fw_printenv -n "$env_ws_token" | base64 -d | gzip -d > "$path_ws_token"
+  fi
+}
