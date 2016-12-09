@@ -2,20 +2,14 @@
 
 START=55
 
-env_authorized_keys_seg="auth-ssh-keys-"
+path_env_config="/etc/fw_env_ext.config"
+
+env_authorized_keys="auth-ssh-keys"
 path_authorized_keys="/tmp/authorized_keys"
 
 boot() {
-  if fw_printenv | grep -q "^$env_authorized_keys_seg" 2>/dev/null; then
-    env_authorized_keys=
-    for i in $(seq 20); do
-      if ! fw_printenv -n "${env_authorized_keys_seg}${i}" > /dev/null 2>&1; then
-        break
-      fi
-      env_authorized_keys="${env_authorized_keys}$(fw_printenv -n "${env_authorized_keys_seg}${i}")"
-    done
-    if [ -n "$env_authorized_keys" ]; then
-      echo "$env_authorized_keys" | base64 -d | gzip -d  > "$path_authorized_keys"
-    fi
+  if fw_printenv -c "$path_env_config" -n "$env_authorized_keys" > /dev/null 2>&1; then
+    fw_printenv -c "$path_env_config" -n "$env_authorized_keys" | base64 -d | gzip -d > "$path_authorized_keys"
+    logger "Authorized SSH keys deployed"
   fi
 }

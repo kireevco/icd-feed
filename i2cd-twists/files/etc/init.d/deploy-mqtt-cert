@@ -14,13 +14,16 @@ path_mqtt_cli_key="/tmp/mqtt-cli-key"
 boot() {
   if fw_printenv -c "$path_env_config" -n "$env_mqtt_ca_cert" > /dev/null 2>&1; then
     fw_printenv -c "$path_env_config" -n "$env_mqtt_ca_cert" | base64 -d | gzip -d > "$path_mqtt_ca_cert"
+    logger "MQTT CA certificate deployed"
   fi
 
   if fw_printenv -c "$path_env_config" -n "$env_mqtt_cli_cert" > /dev/null 2>&1; then
     fw_printenv -c "$path_env_config" -n "$env_mqtt_cli_cert" | base64 -d | gzip -d > "$path_mqtt_cli_cert"
+    logger "MQTT certificate deployed"
   fi
 
   if fw_printenv -c "$path_env_config" -n "$env_mqtt_cli_key" > /dev/null 2>&1; then
     fw_printenv -c "$path_env_config" -n "$env_mqtt_cli_key" | base64 -d | gzip -d > "$path_mqtt_cli_key"
+    logger "MQTT key deployed"
   fi
 }

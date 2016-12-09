@@ -10,5 +10,6 @@ path_ws_cert="/tmp/ws-cert"
 boot() {
   if fw_printenv -c "$path_env_config" -n "$env_ws_cert" > /dev/null 2>&1; then
     fw_printenv -c "$path_env_config" -n "$env_ws_cert" | base64 -d | gzip -d > "$path_ws_cert"
+    logger "WebSocket certificate deployed"
   fi
 }
