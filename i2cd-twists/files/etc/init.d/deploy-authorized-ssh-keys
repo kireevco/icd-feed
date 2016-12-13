@@ -10,6 +10,6 @@ path_authorized_keys="/tmp/authorized_keys"
 boot() {
   if fw_printenv -c "$path_env_config" -n "$env_authorized_keys" > /dev/null 2>&1; then
     fw_printenv -c "$path_env_config" -n "$env_authorized_keys" | base64 -d | gzip -d > "$path_authorized_keys"
-    logger "Authorized SSH keys deployed"
+    echo "Authorized SSH keys deployed" > /dev/kmsg
   fi
 }
