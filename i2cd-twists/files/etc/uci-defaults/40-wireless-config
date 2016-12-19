@@ -1,4 +1,11 @@
 ethaddr=$(fw_printenv -n ethaddr | tr -d ':')
+path_env_config="/etc/fw_env_ext.config"
+env_wsta_ssid="wsta-ssid"
+env_wsta_enc="wsta-enc"
+env_wsta_passwd="wsta-passwd"
+wsta_ssid=$(fw_printenv -c "$path_env_config" -n "$env_wsta_ssid")
+wsta_enc=$(fw_printenv -c "$path_env_config" -n "$env_wsta_enc")
+wsta_passwd=$(fw_printenv -c "$path_env_config" -n "$env_wsta_passwd")
 
 [ -z "$ethaddr" ] && return
 
@@ -10,7 +17,7 @@ while [ "$(( n % 2 ))" != "0" ]; do
 done
 
 waddr=$(printf "%012x" "$n" | sed 's/.\{2\}/\:&/g' | cut -c 2-)
-ssid="Flo-$(echo -n $waddr | tr -d ':' | cut -c 9-)"
+wap_ssid="Flo-$(echo -n $waddr | tr -d ':' | cut -c 9-)"
 
 cat > /etc/config/wireless << EOF
 
@@ -27,7 +34,7 @@ config wifi-iface 'ap'
 	option ifname 'wlan0'
 	option mode 'ap'
 	option network 'lan'
-	option ssid '$ssid'
+	option ssid '$wap_ssid'
 	option disabled '1'
 	option duration '1200'
 
@@ -37,7 +44,10 @@ config wifi-iface 'sta'
 	option ifname 'wwan0'
 	option mode 'sta'
 	option network 'wan'
-	option disabled '1'
+	option ssid '$wsta_ssid'
+	option encryption '$wsta_enc'
+	option key '$wsta_passwd'
+	option disabled '0'
 EOF
 
 exit 0

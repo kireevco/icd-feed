@@ -1,61 +1,72 @@
 #!/bin/sh
 
+path_env_config="/etc/fw_env_ext.config"
+env_wsta_ssid="wsta-ssid"
+env_wsta_enc="wsta-enc"
+env_wsta_passwd="wsta-passwd"
+
 cmd=$(basename "$0")
 enabled="$1"
 ssid="$2"
 encryption="$3"
 passwd="$4"
 
-dialect=
-
-case "$cmd" in
-  config-wifi-ap)
-    dialect=ap
-    ;;
-  config-wifi-sta)
-    dialect=sta
-    ;;
-  *)
-    dialect=
-    ;;
-esac
-
 [ "$enabled" = "1" -o "$enabled" = "0" ] || {
 	cat << EOF
-usage: config-wifi-$dialect <enabled> [<ssid> <encryption> <password>]
+usage: $cmd <enabled> [<ssid> <encryption> <password>]
 
 enabled: 1, 0
-encryption: psk, psk+aes, psk+tkip, psk+tkip+aes, psk2, psk2+aes, psk2+tkip, psk2+tkip+aes
+encryption: none, psk, psk+aes, psk+tkip, psk+tkip+aes, psk2, psk2+aes, psk2+tkip, psk2+tkip+aes
 EOF
 	exit 2
 }
 
 . /lib/functions/wireless.sh
 
-if [ "$enabled" = "1" ]; then
-	uci set wireless.$dialect.disabled="0"
-	case "$dialect" in
-		ap)
-			uci batch << EOF
+if [ "$cmd" = "config-wifi-ap" ]; then
+	if [ "$enabled" = "1" ]; then
+		uci batch << EOF
 set network.lan.proto=static
+set wireless.ap.disabled="0"
 set wireless.sta.disabled=1
 commit network
 EOF
-			;;
-		sta)
-			uci batch << EOF
+	else
+		uci set wireless.ap.disabled="1"
+	fi
+	[ -n "$ssid" ] && {
+		uci set wireless.ap.ssid="$ssid"
+	}
+	[ -n "$encryption" ] && {
+		uci set wireless.ap.encryption="$encryption"
+	}
+	[ -n "$passwd" ] && {
+		uci set wireless.ap.key="$(wireless_encrypt_passwd "$passwd")"
+	}
+elif [ "$cmd" = "config-wifi-sta" ]; then
+	if [ "$enabled" = "1" ]; then
+		uci batch << EOF
 set network.lan.proto=none
+set wireless.sta.disabled="0"
 set wireless.ap.disabled=1
 commit network
 EOF
-			;;
-	esac
-elif [ "$enabled" = "0" ]; then
-	uci set wireless.$dialect.disabled="1"
+	else
+		uci set wireless.sta.disabled="1"
+	fi
+	[ -n "$ssid" ] && {
+		fw_setenv -c "$path_env_config" "$env_wsta_ssid" "$ssid"
+		uci set wireless.sta.ssid="$ssid"
+	}
+	[ -n "$encryption" ] && {
+		fw_setenv -c "$path_env_config" "$env_wsta_enc" "$encryption"
+		uci set wireless.sta.encryption="$encryption"
+	}
+	[ -n "$passwd" ] && {
+		encrypted_passwd=$(wireless_encrypt_passwd "$passwd")
+		fw_setenv -c "$path_env_config" "$env_wsta_passwd" "$encrypted_passwd"
+		uci set wireless.sta.key="$encrypted_passwd"
+	}
 fi
-
-[ -n "$ssid" ] && uci set wireless.$dialect.ssid="$ssid"
-[ -n "$passwd" ] && uci set wireless.$dialect.key="$(wireless_encrypt_passwd "$passwd")"
-[ -n "$encryption" ] && uci set wireless.$dialect.encryption="$encryption"
 
 uci commit wireless

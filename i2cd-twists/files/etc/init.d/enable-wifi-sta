@@ -1,0 +1,9 @@
+#!/bin/sh /etc/rc.common
+
+START=18
+
+boot() {
+	if [ "$(uci get wireless.sta.disabled)" = "1" ]; then
+		config-wifi-sta 1
+	fi
+}
