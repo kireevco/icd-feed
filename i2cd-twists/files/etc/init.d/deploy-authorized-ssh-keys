@@ -12,6 +12,10 @@ boot() {
 			> /dev/null 2>&1; then
 		fw_printenv -c "$path_env_config" -n "$env_authorized_keys" | base64 -d \
 			| gzip -d > "$path_authorized_keys"
-		echo "Authorized SSH keys deployed" > /dev/kmsg
+		if [ -s "$path_authorized_keys" ]; then
+			echo "Authorized SSH keys deployed" > /dev/kmsg
+		else
+			rm "$path_authorized_keys"
+		fi
 	fi
 }

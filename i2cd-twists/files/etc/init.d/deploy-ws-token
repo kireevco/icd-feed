@@ -11,6 +11,10 @@ boot() {
 	if fw_printenv -c "$path_env_config" -n "$env_ws_token" > /dev/null 2>&1; then
 		fw_printenv -c "$path_env_config" -n "$env_ws_token" | base64 -d \
 			| gzip -d > "$path_ws_token"
-		echo "WebSocket token deployed" > /dev/kmsg
+		if [ -s "$path_ws_token" ]; then
+			echo "WebSocket token deployed" > /dev/kmsg
+		else
+			rm "$path_ws_token"
+		fi
 	fi
 }
