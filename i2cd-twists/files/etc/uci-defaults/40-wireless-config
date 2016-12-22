@@ -6,6 +6,12 @@ env_wsta_passwd="wsta-passwd"
 wsta_ssid=$(fw_printenv -c "$path_env_config" -n "$env_wsta_ssid")
 wsta_enc=$(fw_printenv -c "$path_env_config" -n "$env_wsta_enc")
 wsta_passwd=$(fw_printenv -c "$path_env_config" -n "$env_wsta_passwd")
+if ! fw_printenv -c "$path_env_config" -n "$env_wsta_ssid" \
+		> /dev/null 2>&1; then
+	wsta_ssid=$(fw_printenv -n "$env_wsta_ssid")
+	wsta_enc=$(fw_printenv -n "$env_wsta_enc")
+	wsta_passwd=$(fw_printenv -n "$env_wsta_passwd")
+fi
 
 [ -z "$ethaddr" ] && return
 
